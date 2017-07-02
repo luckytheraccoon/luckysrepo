@@ -1,0 +1,41 @@
+$default-color: red;
+
+html, body {
+	margin:0;
+	padding:0;
+}
+.container {
+	display:flex;
+}
+.container>* {
+	align-self:center;
+	padding:10px;
+}
+.div-header.container *:first-child {
+	flex-grow: 1;
+}
+.div-header.container *:last-child {
+	flex-grow: 0;
+}
+.div-header {
+	background-color:$default-color;
+}
+.div-welcome-mat {
+	background-color:blue;
+}
+.div-hot-topics {
+	background-color:yellow;
+}
+.div-how-we-work {
+	background-color:gray;
+}
+.div-featured {
+	background-color:black;
+}
+.div-user-progress {
+	background-color:pink;
+	height:300px;
+}
+.div-footer {
+	background-color:$default-color;
+}

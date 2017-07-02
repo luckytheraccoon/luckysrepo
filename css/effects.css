@@ -1,0 +1,66 @@
+@keyframes animateStarWrap_2 {
+  from {  left:95px; }
+  to {  left:195px; }
+}
+.starWrap-animate-2 {
+  animation-name: "animateStarWrap_2";
+}
+@keyframes animateStarWrap_1 {
+  to {  left:95px; }
+}
+.starWrap-animate-1 {
+  animation-name: "animateStarWrap_1";
+}
+.starWrap {
+  background: green;
+  position: absolute;
+  top:100px;
+  left:0;
+  width: 200px;
+  height: 200px;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+@keyframes animateStar {
+  from { transform: scale(0); opacity:1; }
+  to { transform: scale(6); opacity:0; }
+}
+.star {
+  transform: scale(0);
+  color:red;
+  opacity:0;
+  position: absolute !important;
+  height:10px;
+  line-height:10px;
+  font-size:10px;
+  margin:-5px;
+  animation-name: animateStar;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+}
+@keyframes animateBar_2 {
+  from {  width:100px; }
+  to {  width:200px; }
+}
+.bar-animate-2 {
+  animation-name: "animateBar_2";
+}
+@keyframes animateBar_1 {
+  from {  width:0; }
+  to {  width:100px; }
+}
+.bar-animate-1 {
+  animation-name: "animateBar_1";
+}
+.bar {
+  background:red;
+  top:0;
+  left:0;
+  width: 0px;
+  height: 30px;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+.growBar {
+  
+}

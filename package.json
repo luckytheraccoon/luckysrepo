@@ -1,0 +1,33 @@
+{
+  "name": "myprojectfe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "build": "babel src -d lib && browserify lib/babel-index.js > lib/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^6.0.78",
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.5.2",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^0.28.4",
+    "eslint": "^4.1.1",
+    "eslint-plugin-react": "^7.1.0",
+    "gulp-babel": "^6.1.2",
+    "gulp-browser": "^3.0.4",
+    "gulp-clean-css": "^3.4.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-uglify": "^3.0.0",
+    "pump": "^1.0.2",
+    "webpack": "^3.0.0"
+  },
+  "dependencies": {
+    "react-transition-group": "^1.2.0"
+  }
+}

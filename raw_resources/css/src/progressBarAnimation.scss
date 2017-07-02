@@ -1,0 +1,80 @@
+@keyframes animateStar {
+  from { transform: scale(0); opacity:1; }
+  to { transform: scale(6); opacity:0; }
+}
+
+.progressEffectsStar {
+  transform: scale(0);
+  color:red;
+  opacity:0;
+  position: absolute !important;
+  height:10px;
+  line-height:10px;
+  font-size:10px;
+  margin:-5px;
+  animation-name: animateStar;
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+}
+
+.progressEffectsStarWrap {
+  position: absolute;
+  top:0;
+  left:0;
+  width: 30px;
+  height: 30px;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+
+.progressBarWrap {
+  position: absolute;
+}
+
+.progressBar {
+  position: absolute;
+  background:red;
+  top:0;
+  left:0;
+  width: 0px;
+  height: 30px;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+}
+
+$barSteps: 5;
+$barStepWidth: 100px;
+$starWrapStepMovement: 100px;
+
+@function strip-unit($number) {
+  @if type-of($number) == 'number' and not unitless($number) {
+    @return $number / ($number * 0 + 1);
+  }
+
+  @return $number;
+}
+
+@function multiply-use-first-unit($value1, $value2) {
+  @return $value1 * strip-unit($value2);
+}
+
+@for $i from 1 through $barSteps {
+
+  @keyframes progressBar-animate_#{$i} {
+    from {  width: multiply-use-first-unit($barStepWidth, $i - 1); }
+    to {  width: multiply-use-first-unit($barStepWidth, $i); }
+  }
+      
+  .progressBar-animate-#{$i}{
+    animation-name: "progressBar-animate_#{$i}";
+  }
+
+  @keyframes progressEffectsStarWrap-animate_#{$i} {
+    from {  left:multiply-use-first-unit($starWrapStepMovement, $i - 1); }
+    to {  left:multiply-use-first-unit($starWrapStepMovement, $i); }
+  }
+
+  .progressEffectsStarWrap-animate-#{$i} {
+    animation-name: "progressEffectsStarWrap-animate_#{$i}";
+  }
+}

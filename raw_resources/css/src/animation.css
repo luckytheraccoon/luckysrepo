@@ -1,0 +1,53 @@
+.div-login-form {
+  position: absolute;
+  right: 10px;
+  top: 10px; }
+
+.div-login-form-enter {
+  position: absolute;
+  right: 10px;
+  top: -100px; }
+
+.div-login-form-enter.div-login-form-enter-active {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  transition: 700ms; }
+
+.div-login-form-leave {
+  position: absolute;
+  right: 10px;
+  top: 10px; }
+
+.div-login-form-leave.div-login-form-leave-active {
+  position: absolute;
+  right: 10px;
+  top: -100px;
+  transition: 700ms; }
+
+.button-authentication {
+  position: absolute;
+  right: 10px;
+  top: 10px; }
+
+.button-authentication-enter {
+  position: absolute;
+  right: -100px;
+  top: 10px; }
+
+.button-authentication-enter.button-authentication-enter-active {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  transition: 700ms; }
+
+.button-authentication-leave {
+  position: absolute;
+  right: 10px;
+  top: 10px; }
+
+.button-authentication-leave.button-authentication-leave-active {
+  position: absolute;
+  right: -100px;
+  top: 10px;
+  transition: 700ms; }
