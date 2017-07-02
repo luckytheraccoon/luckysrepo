@@ -22,7 +22,7 @@ function DivContainer(props) {
     if(typeof props.classes != "undefined") {
         className = props.classes + " ";
     }
-    className = className + "container";
+    className = className + "div-container";
     return <div className={className}>{props.children}</div>;
 }
 

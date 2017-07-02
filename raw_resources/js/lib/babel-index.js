@@ -52,7 +52,7 @@ function DivContainer(props) {
     if (typeof props.classes != "undefined") {
         className = props.classes + " ";
     }
-    className = className + "container";
+    className = className + "div-container";
     return _react2.default.createElement(
         "div",
         { className: className },
