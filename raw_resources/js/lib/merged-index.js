@@ -22527,18 +22527,18 @@ function Header() {
         _react2.default.createElement(
             "div",
             null,
-            _react2.default.createElement(LoginForm, null)
+            _react2.default.createElement(AuthMenu, null)
         )
     );
 }
 
-var LoginForm = function (_React$Component2) {
-    _inherits(LoginForm, _React$Component2);
+var AuthMenu = function (_React$PureComponent) {
+    _inherits(AuthMenu, _React$PureComponent);
 
-    function LoginForm(props) {
-        _classCallCheck(this, LoginForm);
+    function AuthMenu(props) {
+        _classCallCheck(this, AuthMenu);
 
-        var _this2 = _possibleConstructorReturn(this, (LoginForm.__proto__ || Object.getPrototypeOf(LoginForm)).call(this, props));
+        var _this2 = _possibleConstructorReturn(this, (AuthMenu.__proto__ || Object.getPrototypeOf(AuthMenu)).call(this, props));
 
         _this2.state = {
             isLoggedIn: false,
@@ -22547,6 +22547,7 @@ var LoginForm = function (_React$Component2) {
             email: "",
             password: "",
             modal: false,
+            modalDismissed: false,
             checkAuthDone: false
         };
 
@@ -22561,12 +22562,12 @@ var LoginForm = function (_React$Component2) {
         return _this2;
     }
 
-    _createClass(LoginForm, [{
+    _createClass(AuthMenu, [{
         key: "componentDidMount",
         value: function componentDidMount() {
             var _this3 = this;
 
-            ajaxGet("/checkAuth", function (response) {
+            ajaxGet("/checkAuth", null, function (response) {
                 _this3.setState({
                     isLoggedIn: response.loggedIn,
                     loggedInAs: response.loggedInAs,
@@ -22589,10 +22590,15 @@ var LoginForm = function (_React$Component2) {
         value: function handleLogoutClick() {
             var _this4 = this;
 
-            ajaxPost("/logout", null, function (response) {
-                if (response.unauth == "ok") {
-                    _this4.setState({ isLoggedIn: false });
-                }
+            ajaxPost("/logout", null, function () {
+                _this4.setState({
+                    checkAuthDone: false
+                });
+            }, function (response) {
+                _this4.setState({
+                    isLoggedIn: response.loggedIn,
+                    checkAuthDone: true
+                });
             });
         }
     }, {
@@ -22606,14 +22612,14 @@ var LoginForm = function (_React$Component2) {
     }, {
         key: "handleOpenModal",
         value: function handleOpenModal() {
-            this.setState({ modal: true });
+            this.setState({ modal: true, modalDismissed: false });
         }
     }, {
         key: "handleCloseModal",
         value: function handleCloseModal(event) {
             var target = event.target;
             if (["close-modal", "div-modal"].includes(target.className)) {
-                this.setState({ modal: false });
+                this.setState({ modal: false, modalDismissed: true });
             }
         }
     }, {
@@ -22627,32 +22633,61 @@ var LoginForm = function (_React$Component2) {
             var _this5 = this;
 
             event.preventDefault();
-            ajaxPost("/login", $("#loginForm").serializeObject(), function (response) {
-                if (response.auth == "ok") {
-                    _this5.setState({ isLoggedIn: true });
+            ajaxPost("/login", $("#loginForm").serializeObject(), function () {
+                _this5.setState({
+                    checkAuthDone: false
+                });
+            }, function (response) {
+                _this5.setState({
+                    isLoggedIn: response.loggedIn,
+                    loggedInAs: response.loggedInAs
+                });
+
+                if (_this5.state.isLoggedIn === true) {
+                    _this5.setState({
+                        checkAuthDone: true
+                    });
+                    if (_this5.state.modal) {
+                        _this5.setState({ modal: false, modalDismissed: true });
+                        return;
+                    }
                     _this5.handleHideLoginFormClick();
                     return;
                 }
+
                 _this5.handleLoginError();
             });
         }
     }, {
         key: "render",
         value: function render() {
-            var checkAuthDone = this.state.checkAuthDone;
-            if (checkAuthDone) {
-                var isLoggedIn = this.state.isLoggedIn;
-                var loggedInAs = this.state.loggedInAs;
-                var showLoginForm = this.state.showLoginForm;
-                var showModal = this.state.modal;
-                var userMenu = null;
-                var loginMenu = null;
-                var guestMenu = null;
-                var modal = null;
 
-                if (showModal) {
-                    modal = _react2.default.createElement(Modal, { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal });
-                }
+            var modalState = this.state.modal;
+            var modalDismissed = this.state.modalDismissed;
+            var isLoggedIn = this.state.isLoggedIn;
+            var loggedInAs = this.state.loggedInAs;
+            var showLoginForm = this.state.showLoginForm;
+            var checkAuthDone = this.state.checkAuthDone;
+            var modal = null;
+            var userMenu = null;
+            var loginMenu = null;
+            var guestMenu = null;
+
+            if (modalState) {
+                modal = _react2.default.createElement(
+                    Modal,
+                    { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal },
+                    _react2.default.createElement(
+                        LoginMenu,
+                        null,
+                        _react2.default.createElement(LoginForm, {
+                            fields: { email: this.state.email, password: this.state.password },
+                            onSubmit: this.handleSubmit,
+                            onInputChange: this.handleChange })
+                    )
+                );
+            }
+            if (checkAuthDone || modalDismissed) {
 
                 if (isLoggedIn) {
                     userMenu = _react2.default.createElement(LoggedUserMenu, { onClickLogout: this.handleLogoutClick, username: loggedInAs });
@@ -22661,24 +22696,11 @@ var LoginForm = function (_React$Component2) {
                         loginMenu = _react2.default.createElement(
                             LoginMenu,
                             null,
-                            _react2.default.createElement(
-                                "form",
-                                { id: "loginForm", onSubmit: this.handleSubmit },
-                                _react2.default.createElement(
-                                    "label",
-                                    null,
-                                    " Email: "
-                                ),
-                                _react2.default.createElement("input", { name: "email", type: "text", value: this.state.email, onChange: this.handleChange }),
-                                _react2.default.createElement(
-                                    "label",
-                                    null,
-                                    " Password: "
-                                ),
-                                _react2.default.createElement("input", { name: "password", type: "password", value: this.state.password, onChange: this.handleChange }),
-                                _react2.default.createElement("input", { type: "submit", value: "Submit" })
-                            ),
-                            _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: this.handleHideLoginFormClick })
+                            _react2.default.createElement(LoginForm, {
+                                fields: { email: this.state.email, password: this.state.password },
+                                onSubmit: this.handleSubmit,
+                                cancelButton: { onCancel: this.handleHideLoginFormClick },
+                                onInputChange: this.handleChange })
                         );
                     } else {
                         guestMenu = _react2.default.createElement(
@@ -22728,8 +22750,8 @@ var LoginForm = function (_React$Component2) {
         }
     }]);
 
-    return LoginForm;
-}(_react2.default.Component);
+    return AuthMenu;
+}(_react2.default.PureComponent);
 
 function LoginMenu(props) {
     return _react2.default.createElement(
@@ -22760,8 +22782,8 @@ function LoggedUserMenu(props) {
     );
 }
 
-var WelcomeMat = function (_React$Component3) {
-    _inherits(WelcomeMat, _React$Component3);
+var WelcomeMat = function (_React$Component2) {
+    _inherits(WelcomeMat, _React$Component2);
 
     function WelcomeMat(props) {
         _classCallCheck(this, WelcomeMat);
@@ -22814,6 +22836,7 @@ function Modal(props) {
                 { className: "message" },
                 props.message
             ),
+            props.children,
             _react2.default.createElement(
                 "button",
                 { onClick: props.onClick, className: "close-modal" },
@@ -22823,8 +22846,39 @@ function Modal(props) {
     );
 }
 
-var MainApp = function (_React$Component4) {
-    _inherits(MainApp, _React$Component4);
+function LoginForm(props) {
+
+    var cancelButton = null;
+    if (props.cancelButton != null) {
+        cancelButton = _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: props.cancelButton.onCancel });
+    }
+
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(
+            "form",
+            { id: "loginForm", onSubmit: props.onSubmit },
+            _react2.default.createElement(
+                "label",
+                null,
+                " Email: "
+            ),
+            _react2.default.createElement("input", { name: "email", type: "text", value: props.fields.email, onChange: props.onInputChange }),
+            _react2.default.createElement(
+                "label",
+                null,
+                " Password: "
+            ),
+            _react2.default.createElement("input", { name: "password", type: "password", value: props.fields.password, onChange: props.onInputChange }),
+            _react2.default.createElement("input", { type: "submit", value: "Submit" })
+        ),
+        cancelButton
+    );
+}
+
+var MainApp = function (_React$Component3) {
+    _inherits(MainApp, _React$Component3);
 
     function MainApp() {
         _classCallCheck(this, MainApp);
@@ -22855,7 +22909,11 @@ var MainApp = function (_React$Component4) {
 
 _reactDom2.default.render(_react2.default.createElement(MainApp, null), document.getElementById("root"));
 
-function ajaxGet(route, onComplete) {
+function ajaxGet(route, before, onComplete) {
+    if (before != null) {
+        before();
+    }
+
     fetch("http://myproject.app" + route, {
         credentials: "same-origin",
         headers: {
@@ -22871,7 +22929,11 @@ function ajaxGet(route, onComplete) {
     });
 }
 
-function ajaxPost(route, body, onComplete) {
+function ajaxPost(route, body, before, onComplete) {
+    if (before != null) {
+        before();
+    }
+
     var csrfToken = document.querySelector("meta[name='_token']").content;
 
     if (body === null) {

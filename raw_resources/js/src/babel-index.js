@@ -116,13 +116,13 @@ function Header() {
                 <LogoHeader />
             </div>
             <div>
-                <LoginForm />
+                <AuthMenu />
             </div>
         </DivContainer>
     );
 }
 
-class LoginForm extends React.Component {
+class AuthMenu extends React.PureComponent {
     constructor(props) {
         super(props);
 
@@ -133,6 +133,7 @@ class LoginForm extends React.Component {
             email: "",
             password: "",
             modal: false,
+            modalDismissed: false,
             checkAuthDone: false
         };
 
@@ -147,13 +148,17 @@ class LoginForm extends React.Component {
     }
 
     componentDidMount() {
-        ajaxGet("/checkAuth",(response)=>{
-            this.setState({ 
-                isLoggedIn: response.loggedIn, 
-                loggedInAs: response.loggedInAs, 
-                checkAuthDone: true 
-            });
-        });
+        ajaxGet(
+            "/checkAuth",
+            null,
+            (response)=>{
+                this.setState({ 
+                    isLoggedIn: response.loggedIn, 
+                    loggedInAs: response.loggedInAs, 
+                    checkAuthDone: true 
+                });
+            }
+        );
     }
   
     handleShowLoginFormClick() {
@@ -168,10 +173,16 @@ class LoginForm extends React.Component {
         ajaxPost(
             "/logout",
             null,
+            () => {
+                this.setState({ 
+                    checkAuthDone: false 
+                });
+            },
             (response) => {
-                if (response.unauth == "ok") {
-                    this.setState({ isLoggedIn: false });
-                }
+                this.setState({ 
+                    isLoggedIn: response.loggedIn, 
+                    checkAuthDone: true 
+                });
             }
         );
     }
@@ -184,13 +195,13 @@ class LoginForm extends React.Component {
     }
 
     handleOpenModal() {
-        this.setState({ modal: true });
+        this.setState({ modal: true, modalDismissed: false });
     }
 
     handleCloseModal(event) {
         var target = event.target;
         if(["close-modal","div-modal"].includes(target.className)) {
-            this.setState({ modal: false });
+            this.setState({ modal: false, modalDismissed: true });
         }
     }
 
@@ -203,31 +214,59 @@ class LoginForm extends React.Component {
         ajaxPost(
             "/login",
             $("#loginForm").serializeObject(),
+            () => {
+                this.setState({ 
+                    checkAuthDone: false 
+                });
+            },
             (response) => {
-                if (response.auth == "ok") {
-                    this.setState({ isLoggedIn: true });
+                this.setState({ 
+                    isLoggedIn: response.loggedIn, 
+                    loggedInAs: response.loggedInAs
+                });
+
+                if(this.state.isLoggedIn === true) {
+                    this.setState({ 
+                        checkAuthDone: true 
+                    });
+                    if(this.state.modal) {
+                        this.setState({ modal: false, modalDismissed: true });
+                        return;
+                    } 
                     this.handleHideLoginFormClick();
                     return;
                 }
+                    
                 this.handleLoginError();
             }
         );
     }
     render() {
-        var checkAuthDone = this.state.checkAuthDone;
-        if(checkAuthDone) {
-            var isLoggedIn = this.state.isLoggedIn;
-            var loggedInAs = this.state.loggedInAs;
-            var showLoginForm = this.state.showLoginForm;
-            var showModal = this.state.modal;
-            var userMenu = null;
-            var loginMenu = null;
-            var guestMenu = null;
-            var modal = null;
 
-            if(showModal) {
-                modal = <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}></Modal>;
-            }
+        var modalState = this.state.modal;
+        var modalDismissed = this.state.modalDismissed;
+        var isLoggedIn = this.state.isLoggedIn;
+        var loggedInAs = this.state.loggedInAs;
+        var showLoginForm = this.state.showLoginForm;
+        var checkAuthDone = this.state.checkAuthDone;
+        var modal = null;
+        var userMenu = null;
+        var loginMenu = null;
+        var guestMenu = null;
+
+        if(modalState) {
+            modal = (
+                <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}>
+                    <LoginMenu>
+                        <LoginForm 
+                            fields={{email:this.state.email,password:this.state.password}}
+                            onSubmit={this.handleSubmit} 
+                            onInputChange={this.handleChange} />
+                    </LoginMenu>
+                </Modal>
+            );
+        }
+        if(checkAuthDone || modalDismissed) {
             
             if (isLoggedIn) {
                 userMenu = <LoggedUserMenu onClickLogout={this.handleLogoutClick} username={loggedInAs} />;
@@ -235,14 +274,11 @@ class LoginForm extends React.Component {
                 if (showLoginForm) {
                     loginMenu = (
                         <LoginMenu>
-                            <form id="loginForm" onSubmit={this.handleSubmit}>
-                                <label> Email: </label>
-                                <input name="email" type="text" value={this.state.email} onChange={this.handleChange} />
-                                <label> Password: </label>
-                                <input name="password" type="password" value={this.state.password} onChange={this.handleChange} />
-                                <input type="submit" value="Submit" />
-                            </form>
-                            <Button key="hideLoginForm" label="Cancel" onClick={this.handleHideLoginFormClick} />
+                            <LoginForm 
+                                fields={{email:this.state.email,password:this.state.password}}
+                                onSubmit={this.handleSubmit} 
+                                cancelButton={{onCancel:this.handleHideLoginFormClick}} 
+                                onInputChange={this.handleChange} />
                         </LoginMenu>
                     );
                 } else {
@@ -340,8 +376,30 @@ function Modal(props) {
             <div className="container bg-white box-md">
                 <div className="title">{props.title}</div>
                 <div className="message">{props.message}</div>
+                {props.children}
                 <button onClick={props.onClick} className="close-modal">Close</button>
             </div>
+        </div>
+    );
+}
+
+function LoginForm(props) {
+    
+    var cancelButton = null;
+    if(props.cancelButton != null) {
+        cancelButton = <Button key="hideLoginForm" label="Cancel" onClick={props.cancelButton.onCancel} />;
+    }
+
+    return (
+        <div>
+            <form id="loginForm" onSubmit={props.onSubmit}>
+                <label> Email: </label>
+                <input name="email" type="text" value={props.fields.email} onChange={props.onInputChange} />
+                <label> Password: </label>
+                <input name="password" type="password" value={props.fields.password} onChange={props.onInputChange} />
+                <input type="submit" value="Submit" />
+            </form>
+            {cancelButton}
         </div>
     );
 }
@@ -368,7 +426,11 @@ ReactDOM.render(
     document.getElementById("root")
 );
 
-function ajaxGet(route, onComplete) {
+function ajaxGet(route, before, onComplete) {
+    if(before != null) {
+        before();
+    }
+
     fetch(
         "http://myproject.app"+route,
         {
@@ -387,7 +449,11 @@ function ajaxGet(route, onComplete) {
     });
 }
 
-function ajaxPost(route, body, onComplete) {
+function ajaxPost(route, body, before, onComplete) {
+    if(before != null) {
+        before();
+    }
+
     var csrfToken = document.querySelector("meta[name='_token']").content;
 
     if(body===null) {

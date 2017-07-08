@@ -130,6 +130,11 @@ html, body {
 .div-modal > .container > .message {
   font-size: 0.9em; }
 
+.div-modal > .container > .div-login-menu {
+  position: relative;
+  right: auto;
+  top: auto; }
+
 @keyframes animateStar {
   from {
     transform: scale(0);

@@ -8,6 +8,7 @@ $animation-short-duration: 200ms;
 	right:10px;
 	top:10px;
 }
+
 .div-user-menu-enter,
 .div-guest-menu-enter,
 .div-login-menu-enter {
@@ -38,6 +39,7 @@ $animation-short-duration: 200ms;
   	top:-100px;
   	transition: $animation-medium-duration;
 }
+
 
 .div-modal-a {
 	opacity:1;
