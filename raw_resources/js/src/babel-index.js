@@ -109,17 +109,31 @@ function Footer() {
     );
 }
 
-class Header extends React.Component {
+function Header() {
+    return (
+        <DivContainer classes="div-header">
+            <div>
+                <LogoHeader />
+            </div>
+            <div>
+                <LoginForm />
+            </div>
+        </DivContainer>
+    );
+}
+
+class LoginForm extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             isLoggedIn: false,
+            loggedInAs: null,
             showLoginForm: false,
-            showWarning: false,
             email: "",
             password: "",
-            modal: false
+            modal: false,
+            checkAuthDone: false
         };
 
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
@@ -131,6 +145,16 @@ class Header extends React.Component {
         this.handleOpenModal = this.handleOpenModal.bind(this);
         this.handleCloseModal = this.handleCloseModal.bind(this);
     }
+
+    componentDidMount() {
+        ajaxGet("/checkAuth",(response)=>{
+            this.setState({ 
+                isLoggedIn: response.loggedIn, 
+                loggedInAs: response.loggedInAs, 
+                checkAuthDone: true 
+            });
+        });
+    }
   
     handleShowLoginFormClick() {
         this.setState({ showLoginForm: true });
@@ -141,22 +165,15 @@ class Header extends React.Component {
     }
     
     handleLogoutClick() {
-
-        fetch("http://myproject.app/logout", {
-            credentials: "same-origin",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest", 
-                "Content-type":"application/json charset=UTF-8",
-                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-            },
-            method: "POST"
-        }).then(function (response) {
-            return response.json();
-        }).then(function (response) {
-            if (response.unauth == "ok") {
-                this.setState({ isLoggedIn: false });
+        ajaxPost(
+            "/logout",
+            null,
+            (response) => {
+                if (response.unauth == "ok") {
+                    this.setState({ isLoggedIn: false });
+                }
             }
-        }.bind(this));
+        );
     }
     
     handleChange(event) {
@@ -183,109 +200,114 @@ class Header extends React.Component {
     
     handleSubmit(event) {
         event.preventDefault();
-
-        /*
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", 'http://myproject.app/login', true);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.setRequestHeader("Content-type", "application/json charset=UTF-8");
-        xhr.setRequestHeader("X-CSRF-TOKEN", document.querySelector('meta[name="_token"]').content);
-        xhr.send(JSON.stringify({
-            _token: document.querySelector('meta[name="_token"]').content,
-            email: document.getElementsByName("email")[0].value,
-            password: document.getElementsByName("password")[0].value
-        }));
-        */
-
-        fetch("http://myproject.app/login", {
-            credentials: "same-origin",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest", 
-                "Content-type":"application/json charset=UTF-8",
-                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-            },
-            method: "POST",
-            body: JSON.stringify({
-                _token: document.querySelector("meta[name='_token']").content,
-                email: document.getElementsByName("email")[0].value,
-                password: document.getElementsByName("password")[0].value
-            })
-        }).then(function (response) {
-            return response.json();
-        }).then(function (response) {
-            if (response.auth == "ok") {
-                this.setState({ isLoggedIn: true });
-                this.handleHideLoginFormClick();
-                return;
+        ajaxPost(
+            "/login",
+            $("#loginForm").serializeObject(),
+            (response) => {
+                if (response.auth == "ok") {
+                    this.setState({ isLoggedIn: true });
+                    this.handleHideLoginFormClick();
+                    return;
+                }
+                this.handleLoginError();
             }
-            this.handleLoginError();
-        }.bind(this));
-
+        );
     }
     render() {
-        var isLoggedIn = this.state.isLoggedIn;
-        var showLoginForm = this.state.showLoginForm;
-        var showModal = this.state.modal;
+        var checkAuthDone = this.state.checkAuthDone;
+        if(checkAuthDone) {
+            var isLoggedIn = this.state.isLoggedIn;
+            var loggedInAs = this.state.loggedInAs;
+            var showLoginForm = this.state.showLoginForm;
+            var showModal = this.state.modal;
+            var userMenu = null;
+            var loginMenu = null;
+            var guestMenu = null;
+            var modal = null;
 
-        var logoutButton = null;
-        var loginButton = null;
-        var loginForm = null;
-
-        var modal = null;
-        if(showModal) {
-           modal = <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}></Modal>;
-        }
-        
-        if (isLoggedIn) {
-            logoutButton = <Button classes="button-authentication" label="Logout" onClick={this.handleLogoutClick} />;
-        } else {
-            if (showLoginForm) {
-                loginForm = (
-                    <div className="div-login-form">
-                        <form id="loginForm" onSubmit={this.handleSubmit}>
-                            <label> Email: </label>
-                            <input name="email" type="text" value={this.state.email} onChange={this.handleChange} />
-                            <label> Password: </label>
-                            <input name="password" type="password" value={this.state.password} onChange={this.handleChange} />
-                            <input type="submit" value="Submit" />
-                        </form>
-                        <Button key="hideLoginForm" label="Cancel" onClick={this.handleHideLoginFormClick} />
-                    </div>
-                );
+            if(showModal) {
+                modal = <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}></Modal>;
+            }
+            
+            if (isLoggedIn) {
+                userMenu = <LoggedUserMenu onClickLogout={this.handleLogoutClick} username={loggedInAs} />;
             } else {
-                loginButton = <Button classes="button-authentication" label="Login" onClick={this.handleShowLoginFormClick} />;
+                if (showLoginForm) {
+                    loginMenu = (
+                        <LoginMenu>
+                            <form id="loginForm" onSubmit={this.handleSubmit}>
+                                <label> Email: </label>
+                                <input name="email" type="text" value={this.state.email} onChange={this.handleChange} />
+                                <label> Password: </label>
+                                <input name="password" type="password" value={this.state.password} onChange={this.handleChange} />
+                                <input type="submit" value="Submit" />
+                            </form>
+                            <Button key="hideLoginForm" label="Cancel" onClick={this.handleHideLoginFormClick} />
+                        </LoginMenu>
+                    );
+                } else {
+                    guestMenu = (
+                        <GuestUserMenu>
+                            <Button label="Login" onClick={this.handleShowLoginFormClick} />
+                        </GuestUserMenu>
+                    );
+                }
             }
         }
         return (
-            <DivContainer classes="div-header">
-                <div>
-                    <LogoHeader />
-                    <ReactCSSTransitionGroup 
-                        transitionName="div-login-form" 
-                        transitionEnterTimeout={700} 
-                        transitionLeaveTimeout={700}>
-                        {loginForm}
-                    </ReactCSSTransitionGroup>
-                    
-                    <ReactCSSTransitionGroup 
-                        transitionName="button-authentication"
-                        transitionEnterTimeout={700} 
-                        transitionLeaveTimeout={700}>
-                        {loginButton}
-                        {logoutButton}
-                    </ReactCSSTransitionGroup>
+            <div>
+                <ReactCSSTransitionGroup 
+                    transitionName="div-user-menu" 
+                    transitionEnterTimeout={700} 
+                    transitionLeaveTimeout={700}>
+                    {userMenu}
+                </ReactCSSTransitionGroup>
 
-                    <ReactCSSTransitionGroup 
-                        transitionName="div-modal-a" 
-                        transitionEnterTimeout={200} 
-                        transitionLeaveTimeout={200}>
-                        {modal}
-                    </ReactCSSTransitionGroup>
+                <ReactCSSTransitionGroup 
+                    transitionName="div-login-menu" 
+                    transitionEnterTimeout={700} 
+                    transitionLeaveTimeout={700}>
+                    {loginMenu}
+                </ReactCSSTransitionGroup>
 
-                </div>
-            </DivContainer>
+                <ReactCSSTransitionGroup 
+                    transitionName="div-guest-menu" 
+                    transitionEnterTimeout={700} 
+                    transitionLeaveTimeout={700}>
+                    {guestMenu}
+                </ReactCSSTransitionGroup>
+
+                <ReactCSSTransitionGroup 
+                    transitionName="div-modal-a" 
+                    transitionEnterTimeout={200} 
+                    transitionLeaveTimeout={200}>
+                    {modal}
+                </ReactCSSTransitionGroup>
+            </div>
         );
     }
+}
+function LoginMenu(props) {
+    return (
+        <div className="div-login-menu">
+            {props.children}
+        </div>
+    );
+}
+function GuestUserMenu(props) {
+    return (
+        <div className="div-guest-menu">
+            {props.children}
+        </div>
+    );
+}
+function LoggedUserMenu(props) {
+    return (
+        <div className="div-user-menu">
+            <span>Hello, {props.username}!</span>
+            <Button label="Logout" onClick={props.onClickLogout} />
+        </div>
+    );
 }
 
 class WelcomeMat extends React.Component {
@@ -346,9 +368,54 @@ ReactDOM.render(
     document.getElementById("root")
 );
 
+function ajaxGet(route, onComplete) {
+    fetch(
+        "http://myproject.app"+route,
+        {
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", 
+                "Content-type":"application/json charset=UTF-8",
+                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+            },
+            method: "GET"
+        }
+    ).then(function(response) {
+        return response.json();
+    }).then(function(response) {
+        onComplete(response);
+    });
+}
 
+function ajaxPost(route, body, onComplete) {
+    var csrfToken = document.querySelector("meta[name='_token']").content;
 
-
+    if(body===null) {
+        body = {_token:csrfToken};
+    } else {
+        body._token = csrfToken;
+    }
+    
+    fetch(
+        "http://myproject.app"+route,
+        {
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", 
+                "Content-type":"application/json charset=UTF-8",
+                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+            },
+            method: "POST",
+            body: JSON.stringify(body)
+        }
+    ).then(function (response) {
+        return response.json();
+    }
+    ).then(function (response) {
+        onComplete(response);
+    }.bind(this)
+    );
+}
 
 $.fn.serializeObject = function () {
     var o = {};

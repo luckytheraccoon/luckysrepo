@@ -22515,21 +22515,39 @@ function Footer() {
     );
 }
 
-var Header = function (_React$Component2) {
-    _inherits(Header, _React$Component2);
+function Header() {
+    return _react2.default.createElement(
+        DivContainer,
+        { classes: "div-header" },
+        _react2.default.createElement(
+            "div",
+            null,
+            _react2.default.createElement(LogoHeader, null)
+        ),
+        _react2.default.createElement(
+            "div",
+            null,
+            _react2.default.createElement(LoginForm, null)
+        )
+    );
+}
 
-    function Header(props) {
-        _classCallCheck(this, Header);
+var LoginForm = function (_React$Component2) {
+    _inherits(LoginForm, _React$Component2);
 
-        var _this2 = _possibleConstructorReturn(this, (Header.__proto__ || Object.getPrototypeOf(Header)).call(this, props));
+    function LoginForm(props) {
+        _classCallCheck(this, LoginForm);
+
+        var _this2 = _possibleConstructorReturn(this, (LoginForm.__proto__ || Object.getPrototypeOf(LoginForm)).call(this, props));
 
         _this2.state = {
             isLoggedIn: false,
+            loggedInAs: null,
             showLoginForm: false,
-            showWarning: false,
             email: "",
             password: "",
-            modal: false
+            modal: false,
+            checkAuthDone: false
         };
 
         _this2.handleLogoutClick = _this2.handleLogoutClick.bind(_this2);
@@ -22543,7 +22561,20 @@ var Header = function (_React$Component2) {
         return _this2;
     }
 
-    _createClass(Header, [{
+    _createClass(LoginForm, [{
+        key: "componentDidMount",
+        value: function componentDidMount() {
+            var _this3 = this;
+
+            ajaxGet("/checkAuth", function (response) {
+                _this3.setState({
+                    isLoggedIn: response.loggedIn,
+                    loggedInAs: response.loggedInAs,
+                    checkAuthDone: true
+                });
+            });
+        }
+    }, {
         key: "handleShowLoginFormClick",
         value: function handleShowLoginFormClick() {
             this.setState({ showLoginForm: true });
@@ -22556,22 +22587,13 @@ var Header = function (_React$Component2) {
     }, {
         key: "handleLogoutClick",
         value: function handleLogoutClick() {
+            var _this4 = this;
 
-            fetch("http://myproject.app/logout", {
-                credentials: "same-origin",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-type": "application/json charset=UTF-8",
-                    "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-                },
-                method: "POST"
-            }).then(function (response) {
-                return response.json();
-            }).then(function (response) {
+            ajaxPost("/logout", null, function (response) {
                 if (response.unauth == "ok") {
-                    this.setState({ isLoggedIn: false });
+                    _this4.setState({ isLoggedIn: false });
                 }
-            }.bind(this));
+            });
         }
     }, {
         key: "handleChange",
@@ -22602,131 +22624,141 @@ var Header = function (_React$Component2) {
     }, {
         key: "handleSubmit",
         value: function handleSubmit(event) {
+            var _this5 = this;
+
             event.preventDefault();
-
-            /*
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", 'http://myproject.app/login', true);
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            xhr.setRequestHeader("Content-type", "application/json charset=UTF-8");
-            xhr.setRequestHeader("X-CSRF-TOKEN", document.querySelector('meta[name="_token"]').content);
-            xhr.send(JSON.stringify({
-                _token: document.querySelector('meta[name="_token"]').content,
-                email: document.getElementsByName("email")[0].value,
-                password: document.getElementsByName("password")[0].value
-            }));
-            */
-
-            fetch("http://myproject.app/login", {
-                credentials: "same-origin",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-type": "application/json charset=UTF-8",
-                    "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-                },
-                method: "POST",
-                body: JSON.stringify({
-                    _token: document.querySelector("meta[name='_token']").content,
-                    email: document.getElementsByName("email")[0].value,
-                    password: document.getElementsByName("password")[0].value
-                })
-            }).then(function (response) {
-                return response.json();
-            }).then(function (response) {
+            ajaxPost("/login", $("#loginForm").serializeObject(), function (response) {
                 if (response.auth == "ok") {
-                    this.setState({ isLoggedIn: true });
-                    this.handleHideLoginFormClick();
+                    _this5.setState({ isLoggedIn: true });
+                    _this5.handleHideLoginFormClick();
                     return;
                 }
-                this.handleLoginError();
-            }.bind(this));
+                _this5.handleLoginError();
+            });
         }
     }, {
         key: "render",
         value: function render() {
-            var isLoggedIn = this.state.isLoggedIn;
-            var showLoginForm = this.state.showLoginForm;
+            var checkAuthDone = this.state.checkAuthDone;
+            if (checkAuthDone) {
+                var isLoggedIn = this.state.isLoggedIn;
+                var loggedInAs = this.state.loggedInAs;
+                var showLoginForm = this.state.showLoginForm;
+                var showModal = this.state.modal;
+                var userMenu = null;
+                var loginMenu = null;
+                var guestMenu = null;
+                var modal = null;
 
-            var logoutButton = null;
-            var loginButton = null;
-            var loginForm = null;
+                if (showModal) {
+                    modal = _react2.default.createElement(Modal, { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal });
+                }
 
-            var showModal = this.state.modal;
-            var modal = null;
-            if (showModal) {
-                modal = _react2.default.createElement(Modal, { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal });
-            }
-
-            //const loginFormClasses = ["div-login-form"];
-            if (isLoggedIn) {
-                logoutButton = _react2.default.createElement(Button, { classes: "button-authentication", label: "Logout", onClick: this.handleLogoutClick });
-            } else {
-                if (showLoginForm) {
-                    loginForm = _react2.default.createElement(
-                        "div",
-                        { className: "div-login-form" },
-                        _react2.default.createElement(
-                            "form",
-                            { id: "loginForm", onSubmit: this.handleSubmit },
-                            _react2.default.createElement(
-                                "label",
-                                null,
-                                " Email: "
-                            ),
-                            _react2.default.createElement("input", { name: "email", type: "text", value: this.state.email, onChange: this.handleChange }),
-                            _react2.default.createElement(
-                                "label",
-                                null,
-                                " Password: "
-                            ),
-                            _react2.default.createElement("input", { name: "password", type: "password", value: this.state.password, onChange: this.handleChange }),
-                            _react2.default.createElement("input", { type: "submit", value: "Submit" })
-                        ),
-                        _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: this.handleHideLoginFormClick })
-                    );
+                if (isLoggedIn) {
+                    userMenu = _react2.default.createElement(LoggedUserMenu, { onClickLogout: this.handleLogoutClick, username: loggedInAs });
                 } else {
-                    loginButton = _react2.default.createElement(Button, { classes: "button-authentication", label: "Login", onClick: this.handleShowLoginFormClick });
+                    if (showLoginForm) {
+                        loginMenu = _react2.default.createElement(
+                            LoginMenu,
+                            null,
+                            _react2.default.createElement(
+                                "form",
+                                { id: "loginForm", onSubmit: this.handleSubmit },
+                                _react2.default.createElement(
+                                    "label",
+                                    null,
+                                    " Email: "
+                                ),
+                                _react2.default.createElement("input", { name: "email", type: "text", value: this.state.email, onChange: this.handleChange }),
+                                _react2.default.createElement(
+                                    "label",
+                                    null,
+                                    " Password: "
+                                ),
+                                _react2.default.createElement("input", { name: "password", type: "password", value: this.state.password, onChange: this.handleChange }),
+                                _react2.default.createElement("input", { type: "submit", value: "Submit" })
+                            ),
+                            _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: this.handleHideLoginFormClick })
+                        );
+                    } else {
+                        guestMenu = _react2.default.createElement(
+                            GuestUserMenu,
+                            null,
+                            _react2.default.createElement(Button, { label: "Login", onClick: this.handleShowLoginFormClick })
+                        );
+                    }
                 }
             }
             return _react2.default.createElement(
-                DivContainer,
-                { classes: "div-header" },
+                "div",
+                null,
                 _react2.default.createElement(
-                    "div",
-                    null,
-                    _react2.default.createElement(LogoHeader, null),
-                    _react2.default.createElement(
-                        _reactAddonsCssTransitionGroup2.default,
-                        {
-                            transitionName: "div-login-form",
-                            transitionEnterTimeout: 700,
-                            transitionLeaveTimeout: 700 },
-                        loginForm
-                    ),
-                    _react2.default.createElement(
-                        _reactAddonsCssTransitionGroup2.default,
-                        {
-                            transitionName: "button-authentication",
-                            transitionEnterTimeout: 700,
-                            transitionLeaveTimeout: 700 },
-                        loginButton,
-                        logoutButton
-                    ),
-                    _react2.default.createElement(
-                        _reactAddonsCssTransitionGroup2.default,
-                        {
-                            transitionName: "div-modal-a",
-                            transitionEnterTimeout: 200,
-                            transitionLeaveTimeout: 200 },
-                        modal
-                    )
+                    _reactAddonsCssTransitionGroup2.default,
+                    {
+                        transitionName: "div-user-menu",
+                        transitionEnterTimeout: 700,
+                        transitionLeaveTimeout: 700 },
+                    userMenu
+                ),
+                _react2.default.createElement(
+                    _reactAddonsCssTransitionGroup2.default,
+                    {
+                        transitionName: "div-login-menu",
+                        transitionEnterTimeout: 700,
+                        transitionLeaveTimeout: 700 },
+                    loginMenu
+                ),
+                _react2.default.createElement(
+                    _reactAddonsCssTransitionGroup2.default,
+                    {
+                        transitionName: "div-guest-menu",
+                        transitionEnterTimeout: 700,
+                        transitionLeaveTimeout: 700 },
+                    guestMenu
+                ),
+                _react2.default.createElement(
+                    _reactAddonsCssTransitionGroup2.default,
+                    {
+                        transitionName: "div-modal-a",
+                        transitionEnterTimeout: 200,
+                        transitionLeaveTimeout: 200 },
+                    modal
                 )
             );
         }
     }]);
 
-    return Header;
+    return LoginForm;
 }(_react2.default.Component);
+
+function LoginMenu(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-login-menu" },
+        props.children
+    );
+}
+function GuestUserMenu(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-guest-menu" },
+        props.children
+    );
+}
+function LoggedUserMenu(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-user-menu" },
+        _react2.default.createElement(
+            "span",
+            null,
+            "Hello, ",
+            props.username,
+            "!"
+        ),
+        _react2.default.createElement(Button, { label: "Logout", onClick: props.onClickLogout })
+    );
+}
 
 var WelcomeMat = function (_React$Component3) {
     _inherits(WelcomeMat, _React$Component3);
@@ -22734,11 +22766,11 @@ var WelcomeMat = function (_React$Component3) {
     function WelcomeMat(props) {
         _classCallCheck(this, WelcomeMat);
 
-        var _this3 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
+        var _this6 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
 
-        _this3.handleWarningButton = _this3.handleWarningButton.bind(_this3);
-        _this3.state = { showWarning: false };
-        return _this3;
+        _this6.handleWarningButton = _this6.handleWarningButton.bind(_this6);
+        _this6.state = { showWarning: false };
+        return _this6;
     }
 
     _createClass(WelcomeMat, [{
@@ -22822,6 +22854,47 @@ var MainApp = function (_React$Component4) {
 }(_react2.default.Component);
 
 _reactDom2.default.render(_react2.default.createElement(MainApp, null), document.getElementById("root"));
+
+function ajaxGet(route, onComplete) {
+    fetch("http://myproject.app" + route, {
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-type": "application/json charset=UTF-8",
+            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+        },
+        method: "GET"
+    }).then(function (response) {
+        return response.json();
+    }).then(function (response) {
+        onComplete(response);
+    });
+}
+
+function ajaxPost(route, body, onComplete) {
+    var csrfToken = document.querySelector("meta[name='_token']").content;
+
+    if (body === null) {
+        body = { _token: csrfToken };
+    } else {
+        body._token = csrfToken;
+    }
+
+    fetch("http://myproject.app" + route, {
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-type": "application/json charset=UTF-8",
+            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    }).then(function (response) {
+        return response.json();
+    }).then(function (response) {
+        onComplete(response);
+    }.bind(this));
+}
 
 $.fn.serializeObject = function () {
     var o = {};
