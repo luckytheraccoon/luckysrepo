@@ -3,6 +3,7 @@ $default-color: red;
 html, body {
 	margin:0;
 	padding:0;
+	overflow-x: hidden;
 }
 .div-container {
 	display:flex;
@@ -38,4 +39,35 @@ html, body {
 }
 .div-footer {
 	background-color:$default-color;
+}
+.div-modal {
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+.div-modal>.container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.bg-white {
+  background-color:white;
+}
+.div-modal>.box-md {
+	width:25%;
+	min-height:65%;
+}
+.div-modal>.container>.title {
+	font-size:1em;
+	color:gray;
+}
+.div-modal>.container>.message {
+	font-size:0.9em;
 }

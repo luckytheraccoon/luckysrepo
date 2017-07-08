@@ -117,8 +117,9 @@ class Header extends React.Component {
             isLoggedIn: false,
             showLoginForm: false,
             showWarning: false,
-            username: "",
-            password: ""
+            email: "",
+            password: "",
+            modal: false
         };
 
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
@@ -126,6 +127,9 @@ class Header extends React.Component {
         this.handleHideLoginFormClick = this.handleHideLoginFormClick.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleLoginError = this.handleLoginError.bind(this);
+        this.handleOpenModal = this.handleOpenModal.bind(this);
+        this.handleCloseModal = this.handleCloseModal.bind(this);
     }
   
     handleShowLoginFormClick() {
@@ -137,10 +141,21 @@ class Header extends React.Component {
     }
     
     handleLogoutClick() {
-        fetch("http://myproject.app/logout").then(function (response) {
+
+        fetch("http://myproject.app/logout", {
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", 
+                "Content-type":"application/json charset=UTF-8",
+                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+            },
+            method: "POST"
+        }).then(function (response) {
             return response.json();
-        }).then(function () {
-            this.setState({ isLoggedIn: false });
+        }).then(function (response) {
+            if (response.unauth == "ok") {
+                this.setState({ isLoggedIn: false });
+            }
         }.bind(this));
     }
     
@@ -150,42 +165,93 @@ class Header extends React.Component {
         var name = target.name;
         this.setState({[name]: value});
     }
+
+    handleOpenModal() {
+        this.setState({ modal: true });
+    }
+
+    handleCloseModal(event) {
+        var target = event.target;
+        if(["close-modal","div-modal"].includes(target.className)) {
+            this.setState({ modal: false });
+        }
+    }
+
+    handleLoginError() {
+        this.handleOpenModal();
+    }
     
     handleSubmit(event) {
         event.preventDefault();
-        fetch("http://myproject.app/login").then(function (response) {
+
+        /*
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", 'http://myproject.app/login', true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.setRequestHeader("Content-type", "application/json charset=UTF-8");
+        xhr.setRequestHeader("X-CSRF-TOKEN", document.querySelector('meta[name="_token"]').content);
+        xhr.send(JSON.stringify({
+            _token: document.querySelector('meta[name="_token"]').content,
+            email: document.getElementsByName("email")[0].value,
+            password: document.getElementsByName("password")[0].value
+        }));
+        */
+
+        fetch("http://myproject.app/login", {
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest", 
+                "Content-type":"application/json charset=UTF-8",
+                "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+            },
+            method: "POST",
+            body: JSON.stringify({
+                _token: document.querySelector("meta[name='_token']").content,
+                email: document.getElementsByName("email")[0].value,
+                password: document.getElementsByName("password")[0].value
+            })
+        }).then(function (response) {
             return response.json();
         }).then(function (response) {
-            if (response.loggedIn == "true") {
+            if (response.auth == "ok") {
                 this.setState({ isLoggedIn: true });
                 this.handleHideLoginFormClick();
+                return;
             }
+            this.handleLoginError();
         }.bind(this));
-    }
 
+    }
     render() {
         var isLoggedIn = this.state.isLoggedIn;
         var showLoginForm = this.state.showLoginForm;
+        var showModal = this.state.modal;
 
         var logoutButton = null;
         var loginButton = null;
         var loginForm = null;
-        //const loginFormClasses = ["div-login-form"];
+
+        var modal = null;
+        if(showModal) {
+           modal = <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}></Modal>;
+        }
+        
         if (isLoggedIn) {
             logoutButton = <Button classes="button-authentication" label="Logout" onClick={this.handleLogoutClick} />;
         } else {
             if (showLoginForm) {
                 loginForm = (
                     <div className="div-login-form">
-                        <form onSubmit={this.handleSubmit}>
-                            <label> Username: </label>
-                            <input name="username" type="text" value={this.state.username} onChange={this.handleChange} />
+                        <form id="loginForm" onSubmit={this.handleSubmit}>
+                            <label> Email: </label>
+                            <input name="email" type="text" value={this.state.email} onChange={this.handleChange} />
                             <label> Password: </label>
                             <input name="password" type="password" value={this.state.password} onChange={this.handleChange} />
                             <input type="submit" value="Submit" />
-                            <Button key="hideLoginForm" label="Cancel" onClick={this.handleHideLoginFormClick} />
                         </form>
-                    </div>);
+                        <Button key="hideLoginForm" label="Cancel" onClick={this.handleHideLoginFormClick} />
+                    </div>
+                );
             } else {
                 loginButton = <Button classes="button-authentication" label="Login" onClick={this.handleShowLoginFormClick} />;
             }
@@ -208,6 +274,14 @@ class Header extends React.Component {
                         {loginButton}
                         {logoutButton}
                     </ReactCSSTransitionGroup>
+
+                    <ReactCSSTransitionGroup 
+                        transitionName="div-modal-a" 
+                        transitionEnterTimeout={200} 
+                        transitionLeaveTimeout={200}>
+                        {modal}
+                    </ReactCSSTransitionGroup>
+
                 </div>
             </DivContainer>
         );
@@ -238,10 +312,21 @@ class WelcomeMat extends React.Component {
         );
     }
 }
-
+function Modal(props) {
+    return (
+        <div className="div-modal" onClick={props.onClick}>
+            <div className="container bg-white box-md">
+                <div className="title">{props.title}</div>
+                <div className="message">{props.message}</div>
+                <button onClick={props.onClick} className="close-modal">Close</button>
+            </div>
+        </div>
+    );
+}
 
 class MainApp extends React.Component {
     render() {
+
         return (
             <MainContainer>
                 <Header />
@@ -260,3 +345,24 @@ ReactDOM.render(
     <MainApp />,
     document.getElementById("root")
 );
+
+
+
+
+
+$.fn.serializeObject = function () {
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function () {
+        if (o[this.name] !== undefined) {
+            if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+            }      
+            o[this.name].push(this.value || '');
+        } else {
+            o[this.name] = this.value || '';
+        }
+    });
+    return o;
+};
+

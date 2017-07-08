@@ -51,3 +51,20 @@
   right: -100px;
   top: 10px;
   transition: 700ms; }
+
+.div-modal-a {
+  opacity: 1; }
+
+.div-modal-a-enter {
+  opacity: 0.1; }
+
+.div-modal-a-enter.div-modal-a-enter-active {
+  opacity: 1;
+  transition: 200ms; }
+
+.div-modal-a-leave {
+  opacity: 1; }
+
+.div-modal-a-leave.div-modal-a-leave-active {
+  opacity: 0.1;
+  transition: 200ms; }

@@ -22527,8 +22527,9 @@ var Header = function (_React$Component2) {
             isLoggedIn: false,
             showLoginForm: false,
             showWarning: false,
-            username: "",
-            password: ""
+            email: "",
+            password: "",
+            modal: false
         };
 
         _this2.handleLogoutClick = _this2.handleLogoutClick.bind(_this2);
@@ -22536,6 +22537,9 @@ var Header = function (_React$Component2) {
         _this2.handleHideLoginFormClick = _this2.handleHideLoginFormClick.bind(_this2);
         _this2.handleChange = _this2.handleChange.bind(_this2);
         _this2.handleSubmit = _this2.handleSubmit.bind(_this2);
+        _this2.handleLoginError = _this2.handleLoginError.bind(_this2);
+        _this2.handleOpenModal = _this2.handleOpenModal.bind(_this2);
+        _this2.handleCloseModal = _this2.handleCloseModal.bind(_this2);
         return _this2;
     }
 
@@ -22552,10 +22556,21 @@ var Header = function (_React$Component2) {
     }, {
         key: "handleLogoutClick",
         value: function handleLogoutClick() {
-            fetch("http://myproject.app/logout").then(function (response) {
+
+            fetch("http://myproject.app/logout", {
+                credentials: "same-origin",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-type": "application/json charset=UTF-8",
+                    "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+                },
+                method: "POST"
+            }).then(function (response) {
                 return response.json();
-            }).then(function () {
-                this.setState({ isLoggedIn: false });
+            }).then(function (response) {
+                if (response.unauth == "ok") {
+                    this.setState({ isLoggedIn: false });
+                }
             }.bind(this));
         }
     }, {
@@ -22567,16 +22582,63 @@ var Header = function (_React$Component2) {
             this.setState(_defineProperty({}, name, value));
         }
     }, {
+        key: "handleOpenModal",
+        value: function handleOpenModal() {
+            this.setState({ modal: true });
+        }
+    }, {
+        key: "handleCloseModal",
+        value: function handleCloseModal(event) {
+            var target = event.target;
+            if (["close-modal", "div-modal"].includes(target.className)) {
+                this.setState({ modal: false });
+            }
+        }
+    }, {
+        key: "handleLoginError",
+        value: function handleLoginError() {
+            this.handleOpenModal();
+        }
+    }, {
         key: "handleSubmit",
         value: function handleSubmit(event) {
             event.preventDefault();
-            fetch("http://myproject.app/login").then(function (response) {
+
+            /*
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", 'http://myproject.app/login', true);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.setRequestHeader("Content-type", "application/json charset=UTF-8");
+            xhr.setRequestHeader("X-CSRF-TOKEN", document.querySelector('meta[name="_token"]').content);
+            xhr.send(JSON.stringify({
+                _token: document.querySelector('meta[name="_token"]').content,
+                email: document.getElementsByName("email")[0].value,
+                password: document.getElementsByName("password")[0].value
+            }));
+            */
+
+            fetch("http://myproject.app/login", {
+                credentials: "same-origin",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-type": "application/json charset=UTF-8",
+                    "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+                },
+                method: "POST",
+                body: JSON.stringify({
+                    _token: document.querySelector("meta[name='_token']").content,
+                    email: document.getElementsByName("email")[0].value,
+                    password: document.getElementsByName("password")[0].value
+                })
+            }).then(function (response) {
                 return response.json();
             }).then(function (response) {
-                if (response.loggedIn == "true") {
+                if (response.auth == "ok") {
                     this.setState({ isLoggedIn: true });
                     this.handleHideLoginFormClick();
+                    return;
                 }
+                this.handleLoginError();
             }.bind(this));
         }
     }, {
@@ -22588,6 +22650,13 @@ var Header = function (_React$Component2) {
             var logoutButton = null;
             var loginButton = null;
             var loginForm = null;
+
+            var showModal = this.state.modal;
+            var modal = null;
+            if (showModal) {
+                modal = _react2.default.createElement(Modal, { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal });
+            }
+
             //const loginFormClasses = ["div-login-form"];
             if (isLoggedIn) {
                 logoutButton = _react2.default.createElement(Button, { classes: "button-authentication", label: "Logout", onClick: this.handleLogoutClick });
@@ -22598,22 +22667,22 @@ var Header = function (_React$Component2) {
                         { className: "div-login-form" },
                         _react2.default.createElement(
                             "form",
-                            { onSubmit: this.handleSubmit },
+                            { id: "loginForm", onSubmit: this.handleSubmit },
                             _react2.default.createElement(
                                 "label",
                                 null,
-                                " Username: "
+                                " Email: "
                             ),
-                            _react2.default.createElement("input", { name: "username", type: "text", value: this.state.username, onChange: this.handleChange }),
+                            _react2.default.createElement("input", { name: "email", type: "text", value: this.state.email, onChange: this.handleChange }),
                             _react2.default.createElement(
                                 "label",
                                 null,
                                 " Password: "
                             ),
                             _react2.default.createElement("input", { name: "password", type: "password", value: this.state.password, onChange: this.handleChange }),
-                            _react2.default.createElement("input", { type: "submit", value: "Submit" }),
-                            _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: this.handleHideLoginFormClick })
-                        )
+                            _react2.default.createElement("input", { type: "submit", value: "Submit" })
+                        ),
+                        _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: this.handleHideLoginFormClick })
                     );
                 } else {
                     loginButton = _react2.default.createElement(Button, { classes: "button-authentication", label: "Login", onClick: this.handleShowLoginFormClick });
@@ -22642,6 +22711,14 @@ var Header = function (_React$Component2) {
                             transitionLeaveTimeout: 700 },
                         loginButton,
                         logoutButton
+                    ),
+                    _react2.default.createElement(
+                        _reactAddonsCssTransitionGroup2.default,
+                        {
+                            transitionName: "div-modal-a",
+                            transitionEnterTimeout: 200,
+                            transitionLeaveTimeout: 200 },
+                        modal
                     )
                 )
             );
@@ -22688,6 +22765,32 @@ var WelcomeMat = function (_React$Component3) {
     return WelcomeMat;
 }(_react2.default.Component);
 
+function Modal(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-modal", onClick: props.onClick },
+        _react2.default.createElement(
+            "div",
+            { className: "container bg-white box-md" },
+            _react2.default.createElement(
+                "div",
+                { className: "title" },
+                props.title
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "message" },
+                props.message
+            ),
+            _react2.default.createElement(
+                "button",
+                { onClick: props.onClick, className: "close-modal" },
+                "Close"
+            )
+        )
+    );
+}
+
 var MainApp = function (_React$Component4) {
     _inherits(MainApp, _React$Component4);
 
@@ -22700,6 +22803,7 @@ var MainApp = function (_React$Component4) {
     _createClass(MainApp, [{
         key: "render",
         value: function render() {
+
             return _react2.default.createElement(
                 MainContainer,
                 null,
@@ -22718,4 +22822,20 @@ var MainApp = function (_React$Component4) {
 }(_react2.default.Component);
 
 _reactDom2.default.render(_react2.default.createElement(MainApp, null), document.getElementById("root"));
+
+$.fn.serializeObject = function () {
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function () {
+        if (o[this.name] !== undefined) {
+            if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+            }
+            o[this.name].push(this.value || '');
+        } else {
+            o[this.name] = this.value || '';
+        }
+    });
+    return o;
+};
 },{"react":198,"react-addons-css-transition-group":40,"react-dom":41}]},{},[200]);

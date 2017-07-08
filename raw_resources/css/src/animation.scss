@@ -1,4 +1,5 @@
-$animation-duration: 700ms;
+$animation-medium-duration: 700ms;
+$animation-short-duration: 200ms;
 
 .div-login-form {
 	position:absolute;
@@ -14,7 +15,7 @@ $animation-duration: 700ms;
 	position:absolute;
 	right:10px;
 	top:10px;
-  	transition: $animation-duration;
+  	transition: $animation-medium-duration;
 }
 .div-login-form-leave {
 	position:absolute;
@@ -25,8 +26,10 @@ $animation-duration: 700ms;
 	position:absolute;
 	right:10px;
   	top:-100px;
-  	transition: $animation-duration;
+  	transition: $animation-medium-duration;
 }
+
+
 .button-authentication {
 	position:absolute;
 	right:10px;
@@ -41,7 +44,7 @@ $animation-duration: 700ms;
 	position:absolute;
 	right:10px;
 	top:10px;
-  	transition: $animation-duration;
+  	transition: $animation-medium-duration;
 }
 .button-authentication-leave {
 	position:absolute;
@@ -52,5 +55,24 @@ $animation-duration: 700ms;
 	position:absolute;
 	right:-100px;
   	top:10px;
-  	transition: $animation-duration;
+  	transition: $animation-medium-duration;
+}
+
+
+.div-modal-a {
+	opacity:1;
+}
+.div-modal-a-enter {
+	opacity:0.1;
+}
+.div-modal-a-enter.div-modal-a-enter-active {
+	opacity:1;
+  	transition: $animation-short-duration;
+}
+.div-modal-a-leave {
+	opacity:1;
+}
+.div-modal-a-leave.div-modal-a-leave-active {
+	opacity:0.1;
+  	transition: $animation-short-duration;
 }
