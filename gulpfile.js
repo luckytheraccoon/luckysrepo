@@ -29,36 +29,40 @@ gulp.task('sass', function () {
     .pipe(gulp.dest('raw_resources/css/src'));
 });
 
-gulp.task('js', ['concat-js'], function(cb) {
+gulp.task('js', ['browserify'], function(cb) {
   pump([
-        gulp.src('raw_resources/js/lib/merged-index.js'),
+        gulp.src('raw_resources/js/lib/babelified-merged-scripts.js'),
         uglify(),
-		rename("index.js"),
+		    rename("scripts.js"),
         gulp.dest('js')
     ],
     cb
   );
 });
 
-gulp.task('concat-js', ['browserify'], function () {
-  return gulp.src(['!raw_resources/js/lib/merged-index.js','!raw_resources/js/lib/babel-index.js','raw_resources/js/lib/*.js'])
-    .pipe(concat('merged-index.js'))
-    .pipe(gulp.dest('raw_resources/js/lib'));
-});
-
-gulp.task('browserify', ['babel'], function() {
-    var stream = gulp.src('raw_resources/js/lib/babel-index.js')
+gulp.task('browserify', ['concat-js'], function() {
+    var stream = gulp.src('raw_resources/js/lib/babelified-merged-scripts.js')
         .pipe(gulpBrowser.browserify()) 
-		.pipe(rename('browserified-index.js'))
+        .pipe(rename({
+          prefix: "browserified-",
+        }))
         .pipe(gulp.dest("raw_resources/js/lib"));
     return stream;
 });
 
+gulp.task('concat-js', ['babel'], function () {
+  return gulp.src(['!raw_resources/js/lib/merged-index.js','!raw_resources/js/lib/babelified-merged-*','!raw_resources/js/lib/browserified-*','raw_resources/js/lib/*.js'])
+    .pipe(concat('babelified-merged-scripts.js'))
+    .pipe(gulp.dest('raw_resources/js/lib'));
+});
 
 gulp.task('babel', () => {
-    return gulp.src('raw_resources/js/src/babel-index.js')
+    return gulp.src('raw_resources/js/src/*')
         .pipe(babel({
             presets: ["env","react"]
+        }))
+        .pipe(rename({
+          prefix: "babelified-",
         }))
         .pipe(gulp.dest('raw_resources/js/lib'));
 });

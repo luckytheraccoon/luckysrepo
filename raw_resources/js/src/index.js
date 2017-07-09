@@ -2,32 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom";
 import ReactCSSTransitionGroup from "react-addons-css-transition-group";
 
-function LogoHeader() {
-    return <img src="http://loosepixel.com/wp-content/uploads/2013/02/copy-flat_lplogo.png" />;
-}
-
-function Button(props) {
-    return <button className={props.classes} onClick={props.onClick}>{props.label}</button>;
-}
-
 function Warning(props) {
     if (!props.warn) {
         return null;
     }
     return <span>This is a warning!</span>;
-}
-
-function DivContainer(props) {
-    var className = "";
-    if(typeof props.classes != "undefined") {
-        className = props.classes + " ";
-    }
-    className = className + "div-container";
-    return <div className={className}>{props.children}</div>;
-}
-
-function MainContainer(props) {
-    return <div className="div-main">{props.children}</div>;
 }
 
 function HotTopics() {
@@ -131,9 +110,11 @@ class AuthMenu extends React.PureComponent {
             loggedInAs: null,
             showLoginForm: false,
             showRegisterForm: false,
-            email: "",
-            password: "",
-            modal: false,
+            loginForm_email: "",
+            loginForm_password: "",
+            registerForm_email: "",
+            registerForm_password: "",
+            showModal: false,
             modalDismissed: false,
             checkAuthDone: false
         };
@@ -171,8 +152,7 @@ class AuthMenu extends React.PureComponent {
     }
     
     handleHideRegisterFormClick(event) {
-        this.setState({ showRegisterForm: false });
-        this.handleCloseModal(event);
+        this.handleCloseModal(event, "register");
     }
   
     handleShowLoginFormClick() {
@@ -204,18 +184,21 @@ class AuthMenu extends React.PureComponent {
     handleChange(event) {
         var target = event.target;
         var value = target.value;
-        var name = target.name;
+        var name = target.id;
         this.setState({[name]: value});
     }
 
     handleOpenModal() {
-        this.setState({ modal: true, modalDismissed: false });
+        this.setState({ showModal: true, modalDismissed: false });
     }
 
-    handleCloseModal(event) {
+    handleCloseModal(event, modal) {
         var target = event.target;
         if(["close-modal","div-modal"].includes(target.className)) {
-            this.setState({ modal: false, modalDismissed: true });
+            this.setState({ showModal: false, modalDismissed: true });
+            if(modal === "register") {
+                this.setState({ showRegisterForm: false });
+            }
         }
     }
 
@@ -259,8 +242,8 @@ class AuthMenu extends React.PureComponent {
                     this.setState({ 
                         checkAuthDone: true 
                     });
-                    if(this.state.modal) {
-                        this.setState({ modal: false, modalDismissed: true });
+                    if(this.state.showModal) {
+                        this.setState({ showModal: false, modalDismissed: true });
                         return;
                     } 
                     this.handleHideLoginFormClick();
@@ -273,27 +256,24 @@ class AuthMenu extends React.PureComponent {
     }
     render() {
 
-        var modalState = this.state.modal;
+        var showModal = this.state.showModal;
         var modalDismissed = this.state.modalDismissed;
         var isLoggedIn = this.state.isLoggedIn;
         var loggedInAs = this.state.loggedInAs;
         var showLoginForm = this.state.showLoginForm;
         var showRegisterForm = this.state.showRegisterForm;
         var checkAuthDone = this.state.checkAuthDone;
-        var modal = null;
-        var userMenu = null;
-        var loginMenu = null;
-        var guestMenu = null;
+        var modal, userMenu, loginMenu, guestMenu = null;
 
-        if(modalState) {
+        if(showModal) {
 
             if(showRegisterForm) {
                 modal = (
-                    <Modal title="Sign Up" message="Use the form below to sign up." onClick={this.handleHideRegisterFormClick}>
+                    <Modal title="Sign Up" message="Use the form below to sign up." closeMethod={this.handleHideRegisterFormClick}>
                         <RegisterMenu registerForm={{
                             fields:{    
-                                email:this.state.email,
-                                password:this.state.password
+                                email:this.state.registerForm_email,
+                                password:this.state.registerForm_password
                             },
                             onSubmit:this.handleRegisterFormSubmit,
                             onInputChange:this.handleChange
@@ -302,11 +282,11 @@ class AuthMenu extends React.PureComponent {
                 );
             } else {
                 modal = (
-                    <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}>
+                    <Modal title="Oops...!" message="Incorrect username or password." closeMethod={this.handleCloseModal}>
                         <LoginMenu loginForm={{
                             fields:{    
-                                email:this.state.email,
-                                password:this.state.password
+                                email:this.state.loginForm_email,
+                                password:this.state.loginForm_password
                             },
                             onSubmit:this.handleLoginFormSubmit,
                             onInputChange:this.handleChange
@@ -324,13 +304,11 @@ class AuthMenu extends React.PureComponent {
                     loginMenu = (
                         <LoginMenu loginForm={{
                             fields:{    
-                                email:this.state.email,
-                                password:this.state.password
+                                email:this.state.loginForm_email,
+                                password:this.state.loginForm_password
                             },
                             onSubmit:this.handleLoginFormSubmit,
-                            cancelButton:{
-                                onCancel:this.handleHideLoginFormClick
-                            },
+                            onCancel:this.handleHideLoginFormClick,
                             onInputChange:this.handleChange
                         }} />
                     );
@@ -381,10 +359,9 @@ class AuthMenu extends React.PureComponent {
 function RegisterMenu(props) {
     return (
         <div className="div-register-menu">
-            <LoginForm 
+            <RegisterForm 
                 fields={props.registerForm.fields} 
                 onSubmit={props.registerForm.onSubmit}
-                cancelButton={props.registerForm.cancelButton}
                 onInputChange={props.registerForm.onInputChange} />
         </div>
     );
@@ -396,7 +373,7 @@ function LoginMenu(props) {
             <LoginForm 
                 fields={props.loginForm.fields} 
                 onSubmit={props.loginForm.onSubmit}
-                cancelButton={props.loginForm.cancelButton}
+                onCancel={props.loginForm.onCancel}
                 onInputChange={props.loginForm.onInputChange} />
         </div>
     );
@@ -413,7 +390,7 @@ function LoggedUserMenu(props) {
     return (
         <div className="div-user-menu">
             <span>Hello, {props.username}!</span>
-            <Button label="Logout" onClick={props.onClickLogout} />
+            <Button label="Sign Out" onClick={props.onClickLogout} />
         </div>
     );
 }
@@ -444,51 +421,47 @@ class WelcomeMat extends React.Component {
 }
 function Modal(props) {
     return (
-        <div className="div-modal" onClick={props.onClick}>
+        <div className="div-modal" onClick={props.closeMethod}>
             <div className="container bg-white box-md">
                 <div className="title">{props.title}</div>
                 <div className="message">{props.message}</div>
                 {props.children}
-                <button onClick={props.onClick} className="close-modal">Close</button>
+                <button onClick={props.closeMethod} className="close-modal">Close</button>
             </div>
         </div>
     );
 }
-function RegisterForm(props) {
-    
-    var cancelButton = null;
-    if(props.cancelButton != null) {
-        cancelButton = <Button key="hideLoginForm" label="Cancel" onClick={props.cancelButton.onCancel} />;
-    }
 
+
+
+function RegisterForm(props) {
     return (
         <div>
             <form id="registerForm" onSubmit={props.onSubmit}>
-                <label> Email: </label>
-                <input name="email" type="text" value={props.fields.email} onChange={props.onInputChange} />
-                <label> Password: </label>
-                <input name="password" type="password" value={props.fields.password} onChange={props.onInputChange} />
-                <input type="submit" value="Submit" />
+                <Label for="registerForm_email" text="Email:" />
+                <TextInput id="registerForm_email" name="email" value={props.fields.email} onChange={props.onInputChange} />
+                <Label for="registerForm_password" text="Password:" />
+                <PasswordInput id="registerForm_password" name="password" value={props.fields.password} onChange={props.onInputChange} />
+                <SubmitButton />
             </form>
-            {cancelButton}
         </div>
     );
 }
 function LoginForm(props) {
     
     var cancelButton = null;
-    if(props.cancelButton != null) {
-        cancelButton = <Button key="hideLoginForm" label="Cancel" onClick={props.cancelButton.onCancel} />;
+    if(props.onCancel != null) {
+        cancelButton = <Button key="hideLoginForm" label="Cancel" onClick={props.onCancel} />;
     }
 
     return (
         <div>
             <form id="loginForm" onSubmit={props.onSubmit}>
-                <label> Email: </label>
-                <input name="email" type="text" value={props.fields.email} onChange={props.onInputChange} />
-                <label> Password: </label>
-                <input name="password" type="password" value={props.fields.password} onChange={props.onInputChange} />
-                <input type="submit" value="Submit" />
+                <Label for="loginForm_email" text="Email:" />
+                <TextInput id="loginForm_email" name="email" value={props.fields.email} onChange={props.onInputChange} />
+                <Label for="loginForm_password" text="Password:" />
+                <PasswordInput id="loginForm_password" name="password"  value={props.fields.password} onChange={props.onInputChange} />
+                <SubmitButton />
             </form>
             {cancelButton}
         </div>
