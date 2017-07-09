@@ -22544,6 +22544,7 @@ var AuthMenu = function (_React$PureComponent) {
             isLoggedIn: false,
             loggedInAs: null,
             showLoginForm: false,
+            showRegisterForm: false,
             email: "",
             password: "",
             modal: false,
@@ -22554,8 +22555,11 @@ var AuthMenu = function (_React$PureComponent) {
         _this2.handleLogoutClick = _this2.handleLogoutClick.bind(_this2);
         _this2.handleShowLoginFormClick = _this2.handleShowLoginFormClick.bind(_this2);
         _this2.handleHideLoginFormClick = _this2.handleHideLoginFormClick.bind(_this2);
+        _this2.handleShowRegisterFormClick = _this2.handleShowRegisterFormClick.bind(_this2);
+        _this2.handleHideRegisterFormClick = _this2.handleHideRegisterFormClick.bind(_this2);
         _this2.handleChange = _this2.handleChange.bind(_this2);
-        _this2.handleSubmit = _this2.handleSubmit.bind(_this2);
+        _this2.handleLoginFormSubmit = _this2.handleLoginFormSubmit.bind(_this2);
+        _this2.handleRegisterFormSubmit = _this2.handleRegisterFormSubmit.bind(_this2);
         _this2.handleLoginError = _this2.handleLoginError.bind(_this2);
         _this2.handleOpenModal = _this2.handleOpenModal.bind(_this2);
         _this2.handleCloseModal = _this2.handleCloseModal.bind(_this2);
@@ -22574,6 +22578,18 @@ var AuthMenu = function (_React$PureComponent) {
                     checkAuthDone: true
                 });
             });
+        }
+    }, {
+        key: "handleShowRegisterFormClick",
+        value: function handleShowRegisterFormClick() {
+            this.setState({ showRegisterForm: true });
+            this.handleOpenModal();
+        }
+    }, {
+        key: "handleHideRegisterFormClick",
+        value: function handleHideRegisterFormClick(event) {
+            this.setState({ showRegisterForm: false });
+            this.handleCloseModal(event);
         }
     }, {
         key: "handleShowLoginFormClick",
@@ -22628,34 +22644,48 @@ var AuthMenu = function (_React$PureComponent) {
             this.handleOpenModal();
         }
     }, {
-        key: "handleSubmit",
-        value: function handleSubmit(event) {
+        key: "handleRegisterFormSubmit",
+        value: function handleRegisterFormSubmit(event) {
             var _this5 = this;
 
             event.preventDefault();
-            ajaxPost("/login", $("#loginForm").serializeObject(), function () {
+            ajaxPost("/register", $("#registerForm").serializeObject(), function () {
                 _this5.setState({
                     checkAuthDone: false
                 });
             }, function (response) {
-                _this5.setState({
+                alert("hey!");
+            });
+        }
+    }, {
+        key: "handleLoginFormSubmit",
+        value: function handleLoginFormSubmit(event) {
+            var _this6 = this;
+
+            event.preventDefault();
+            ajaxPost("/login", $("#loginForm").serializeObject(), function () {
+                _this6.setState({
+                    checkAuthDone: false
+                });
+            }, function (response) {
+                _this6.setState({
                     isLoggedIn: response.loggedIn,
                     loggedInAs: response.loggedInAs
                 });
 
-                if (_this5.state.isLoggedIn === true) {
-                    _this5.setState({
+                if (_this6.state.isLoggedIn === true) {
+                    _this6.setState({
                         checkAuthDone: true
                     });
-                    if (_this5.state.modal) {
-                        _this5.setState({ modal: false, modalDismissed: true });
+                    if (_this6.state.modal) {
+                        _this6.setState({ modal: false, modalDismissed: true });
                         return;
                     }
-                    _this5.handleHideLoginFormClick();
+                    _this6.handleHideLoginFormClick();
                     return;
                 }
 
-                _this5.handleLoginError();
+                _this6.handleLoginError();
             });
         }
     }, {
@@ -22667,6 +22697,7 @@ var AuthMenu = function (_React$PureComponent) {
             var isLoggedIn = this.state.isLoggedIn;
             var loggedInAs = this.state.loggedInAs;
             var showLoginForm = this.state.showLoginForm;
+            var showRegisterForm = this.state.showRegisterForm;
             var checkAuthDone = this.state.checkAuthDone;
             var modal = null;
             var userMenu = null;
@@ -22674,18 +22705,34 @@ var AuthMenu = function (_React$PureComponent) {
             var guestMenu = null;
 
             if (modalState) {
-                modal = _react2.default.createElement(
-                    Modal,
-                    { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal },
-                    _react2.default.createElement(
-                        LoginMenu,
-                        null,
-                        _react2.default.createElement(LoginForm, {
-                            fields: { email: this.state.email, password: this.state.password },
-                            onSubmit: this.handleSubmit,
-                            onInputChange: this.handleChange })
-                    )
-                );
+
+                if (showRegisterForm) {
+                    modal = _react2.default.createElement(
+                        Modal,
+                        { title: "Sign Up", message: "Use the form below to sign up.", onClick: this.handleHideRegisterFormClick },
+                        _react2.default.createElement(RegisterMenu, { registerForm: {
+                                fields: {
+                                    email: this.state.email,
+                                    password: this.state.password
+                                },
+                                onSubmit: this.handleRegisterFormSubmit,
+                                onInputChange: this.handleChange
+                            } })
+                    );
+                } else {
+                    modal = _react2.default.createElement(
+                        Modal,
+                        { title: "Oops...!", message: "Incorrect username or password.", onClick: this.handleCloseModal },
+                        _react2.default.createElement(LoginMenu, { loginForm: {
+                                fields: {
+                                    email: this.state.email,
+                                    password: this.state.password
+                                },
+                                onSubmit: this.handleLoginFormSubmit,
+                                onInputChange: this.handleChange
+                            } })
+                    );
+                }
             }
             if (checkAuthDone || modalDismissed) {
 
@@ -22693,21 +22740,23 @@ var AuthMenu = function (_React$PureComponent) {
                     userMenu = _react2.default.createElement(LoggedUserMenu, { onClickLogout: this.handleLogoutClick, username: loggedInAs });
                 } else {
                     if (showLoginForm) {
-                        loginMenu = _react2.default.createElement(
-                            LoginMenu,
-                            null,
-                            _react2.default.createElement(LoginForm, {
-                                fields: { email: this.state.email, password: this.state.password },
-                                onSubmit: this.handleSubmit,
-                                cancelButton: { onCancel: this.handleHideLoginFormClick },
-                                onInputChange: this.handleChange })
-                        );
+                        loginMenu = _react2.default.createElement(LoginMenu, { loginForm: {
+                                fields: {
+                                    email: this.state.email,
+                                    password: this.state.password
+                                },
+                                onSubmit: this.handleLoginFormSubmit,
+                                cancelButton: {
+                                    onCancel: this.handleHideLoginFormClick
+                                },
+                                onInputChange: this.handleChange
+                            } });
                     } else {
-                        guestMenu = _react2.default.createElement(
-                            GuestUserMenu,
-                            null,
-                            _react2.default.createElement(Button, { label: "Login", onClick: this.handleShowLoginFormClick })
-                        );
+                        guestMenu = _react2.default.createElement(GuestUserMenu, {
+                            buttonActions: {
+                                signUp: this.handleShowRegisterFormClick,
+                                signIn: this.handleShowLoginFormClick
+                            } });
                     }
                 }
             }
@@ -22753,18 +22802,35 @@ var AuthMenu = function (_React$PureComponent) {
     return AuthMenu;
 }(_react2.default.PureComponent);
 
+function RegisterMenu(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-register-menu" },
+        _react2.default.createElement(LoginForm, {
+            fields: props.registerForm.fields,
+            onSubmit: props.registerForm.onSubmit,
+            cancelButton: props.registerForm.cancelButton,
+            onInputChange: props.registerForm.onInputChange })
+    );
+}
 function LoginMenu(props) {
+
     return _react2.default.createElement(
         "div",
         { className: "div-login-menu" },
-        props.children
+        _react2.default.createElement(LoginForm, {
+            fields: props.loginForm.fields,
+            onSubmit: props.loginForm.onSubmit,
+            cancelButton: props.loginForm.cancelButton,
+            onInputChange: props.loginForm.onInputChange })
     );
 }
 function GuestUserMenu(props) {
     return _react2.default.createElement(
         "div",
         { className: "div-guest-menu" },
-        props.children
+        _react2.default.createElement(Button, { label: "Sign Up", onClick: props.buttonActions.signUp }),
+        _react2.default.createElement(Button, { label: "Sign In", onClick: props.buttonActions.signIn })
     );
 }
 function LoggedUserMenu(props) {
@@ -22788,11 +22854,11 @@ var WelcomeMat = function (_React$Component2) {
     function WelcomeMat(props) {
         _classCallCheck(this, WelcomeMat);
 
-        var _this6 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
+        var _this7 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
 
-        _this6.handleWarningButton = _this6.handleWarningButton.bind(_this6);
-        _this6.state = { showWarning: false };
-        return _this6;
+        _this7.handleWarningButton = _this7.handleWarningButton.bind(_this7);
+        _this7.state = { showWarning: false };
+        return _this7;
     }
 
     _createClass(WelcomeMat, [{
@@ -22845,7 +22911,36 @@ function Modal(props) {
         )
     );
 }
+function RegisterForm(props) {
 
+    var cancelButton = null;
+    if (props.cancelButton != null) {
+        cancelButton = _react2.default.createElement(Button, { key: "hideLoginForm", label: "Cancel", onClick: props.cancelButton.onCancel });
+    }
+
+    return _react2.default.createElement(
+        "div",
+        null,
+        _react2.default.createElement(
+            "form",
+            { id: "registerForm", onSubmit: props.onSubmit },
+            _react2.default.createElement(
+                "label",
+                null,
+                " Email: "
+            ),
+            _react2.default.createElement("input", { name: "email", type: "text", value: props.fields.email, onChange: props.onInputChange }),
+            _react2.default.createElement(
+                "label",
+                null,
+                " Password: "
+            ),
+            _react2.default.createElement("input", { name: "password", type: "password", value: props.fields.password, onChange: props.onInputChange }),
+            _react2.default.createElement("input", { type: "submit", value: "Submit" })
+        ),
+        cancelButton
+    );
+}
 function LoginForm(props) {
 
     var cancelButton = null;

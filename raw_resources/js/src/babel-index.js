@@ -130,6 +130,7 @@ class AuthMenu extends React.PureComponent {
             isLoggedIn: false,
             loggedInAs: null,
             showLoginForm: false,
+            showRegisterForm: false,
             email: "",
             password: "",
             modal: false,
@@ -140,8 +141,11 @@ class AuthMenu extends React.PureComponent {
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
         this.handleShowLoginFormClick = this.handleShowLoginFormClick.bind(this);
         this.handleHideLoginFormClick = this.handleHideLoginFormClick.bind(this);
+        this.handleShowRegisterFormClick = this.handleShowRegisterFormClick.bind(this);
+        this.handleHideRegisterFormClick = this.handleHideRegisterFormClick.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleLoginFormSubmit = this.handleLoginFormSubmit.bind(this);
+        this.handleRegisterFormSubmit = this.handleRegisterFormSubmit.bind(this);
         this.handleLoginError = this.handleLoginError.bind(this);
         this.handleOpenModal = this.handleOpenModal.bind(this);
         this.handleCloseModal = this.handleCloseModal.bind(this);
@@ -159,6 +163,16 @@ class AuthMenu extends React.PureComponent {
                 });
             }
         );
+    }
+  
+    handleShowRegisterFormClick() {
+        this.setState({ showRegisterForm: true });
+        this.handleOpenModal();
+    }
+    
+    handleHideRegisterFormClick(event) {
+        this.setState({ showRegisterForm: false });
+        this.handleCloseModal(event);
     }
   
     handleShowLoginFormClick() {
@@ -208,8 +222,24 @@ class AuthMenu extends React.PureComponent {
     handleLoginError() {
         this.handleOpenModal();
     }
+
+    handleRegisterFormSubmit(event) {
+        event.preventDefault();
+        ajaxPost(
+            "/register",
+            $("#registerForm").serializeObject(),
+            () => {
+                this.setState({ 
+                    checkAuthDone: false 
+                });
+            },
+            (response) => {
+                alert("hey!");
+            }
+        );
+    }
     
-    handleSubmit(event) {
+    handleLoginFormSubmit(event) {
         event.preventDefault();
         ajaxPost(
             "/login",
@@ -248,6 +278,7 @@ class AuthMenu extends React.PureComponent {
         var isLoggedIn = this.state.isLoggedIn;
         var loggedInAs = this.state.loggedInAs;
         var showLoginForm = this.state.showLoginForm;
+        var showRegisterForm = this.state.showRegisterForm;
         var checkAuthDone = this.state.checkAuthDone;
         var modal = null;
         var userMenu = null;
@@ -255,16 +286,34 @@ class AuthMenu extends React.PureComponent {
         var guestMenu = null;
 
         if(modalState) {
-            modal = (
-                <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}>
-                    <LoginMenu>
-                        <LoginForm 
-                            fields={{email:this.state.email,password:this.state.password}}
-                            onSubmit={this.handleSubmit} 
-                            onInputChange={this.handleChange} />
-                    </LoginMenu>
-                </Modal>
-            );
+
+            if(showRegisterForm) {
+                modal = (
+                    <Modal title="Sign Up" message="Use the form below to sign up." onClick={this.handleHideRegisterFormClick}>
+                        <RegisterMenu registerForm={{
+                            fields:{    
+                                email:this.state.email,
+                                password:this.state.password
+                            },
+                            onSubmit:this.handleRegisterFormSubmit,
+                            onInputChange:this.handleChange
+                        }} />
+                    </Modal>
+                );
+            } else {
+                modal = (
+                    <Modal title="Oops...!" message="Incorrect username or password." onClick={this.handleCloseModal}>
+                        <LoginMenu loginForm={{
+                            fields:{    
+                                email:this.state.email,
+                                password:this.state.password
+                            },
+                            onSubmit:this.handleLoginFormSubmit,
+                            onInputChange:this.handleChange
+                        }} />
+                    </Modal>
+                );
+            }
         }
         if(checkAuthDone || modalDismissed) {
             
@@ -273,19 +322,25 @@ class AuthMenu extends React.PureComponent {
             } else {
                 if (showLoginForm) {
                     loginMenu = (
-                        <LoginMenu>
-                            <LoginForm 
-                                fields={{email:this.state.email,password:this.state.password}}
-                                onSubmit={this.handleSubmit} 
-                                cancelButton={{onCancel:this.handleHideLoginFormClick}} 
-                                onInputChange={this.handleChange} />
-                        </LoginMenu>
+                        <LoginMenu loginForm={{
+                            fields:{    
+                                email:this.state.email,
+                                password:this.state.password
+                            },
+                            onSubmit:this.handleLoginFormSubmit,
+                            cancelButton:{
+                                onCancel:this.handleHideLoginFormClick
+                            },
+                            onInputChange:this.handleChange
+                        }} />
                     );
                 } else {
                     guestMenu = (
-                        <GuestUserMenu>
-                            <Button label="Login" onClick={this.handleShowLoginFormClick} />
-                        </GuestUserMenu>
+                        <GuestUserMenu 
+                            buttonActions={{
+                                signUp:this.handleShowRegisterFormClick, 
+                                signIn:this.handleShowLoginFormClick
+                            }} />
                     );
                 }
             }
@@ -323,17 +378,34 @@ class AuthMenu extends React.PureComponent {
         );
     }
 }
+function RegisterMenu(props) {
+    return (
+        <div className="div-register-menu">
+            <LoginForm 
+                fields={props.registerForm.fields} 
+                onSubmit={props.registerForm.onSubmit}
+                cancelButton={props.registerForm.cancelButton}
+                onInputChange={props.registerForm.onInputChange} />
+        </div>
+    );
+}
 function LoginMenu(props) {
+
     return (
         <div className="div-login-menu">
-            {props.children}
+            <LoginForm 
+                fields={props.loginForm.fields} 
+                onSubmit={props.loginForm.onSubmit}
+                cancelButton={props.loginForm.cancelButton}
+                onInputChange={props.loginForm.onInputChange} />
         </div>
     );
 }
 function GuestUserMenu(props) {
     return (
         <div className="div-guest-menu">
-            {props.children}
+            <Button label="Sign Up" onClick={props.buttonActions.signUp} />
+            <Button label="Sign In" onClick={props.buttonActions.signIn} />
         </div>
     );
 }
@@ -382,7 +454,26 @@ function Modal(props) {
         </div>
     );
 }
+function RegisterForm(props) {
+    
+    var cancelButton = null;
+    if(props.cancelButton != null) {
+        cancelButton = <Button key="hideLoginForm" label="Cancel" onClick={props.cancelButton.onCancel} />;
+    }
 
+    return (
+        <div>
+            <form id="registerForm" onSubmit={props.onSubmit}>
+                <label> Email: </label>
+                <input name="email" type="text" value={props.fields.email} onChange={props.onInputChange} />
+                <label> Password: </label>
+                <input name="password" type="password" value={props.fields.password} onChange={props.onInputChange} />
+                <input type="submit" value="Submit" />
+            </form>
+            {cancelButton}
+        </div>
+    );
+}
 function LoginForm(props) {
     
     var cancelButton = null;

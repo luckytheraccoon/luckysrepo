@@ -1,20 +1,23 @@
 .div-user-menu,
 .div-guest-menu,
-.div-login-menu {
+.div-login-menu,
+.div-register-menu {
   position: absolute;
   right: 10px;
   top: 10px; }
 
 .div-user-menu-enter,
 .div-guest-menu-enter,
-.div-login-menu-enter {
+.div-login-menu-enter,
+.div-register-menu-enter {
   position: absolute;
   right: 10px;
   top: -100px; }
 
 .div-user-menu-enter.div-user-menu-enter-active,
 .div-guest-menu-enter.div-guest-menu-enter-active,
-.div-login-menu-enter.div-login-menu-enter-active {
+.div-login-menu-enter.div-login-menu-enter-active,
+.div-register-menu-enter.div-register-menu-enter-active {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -22,14 +25,16 @@
 
 .div-user-menu-leave,
 .div-guest-menu-leave,
-.div-login-menu-leave {
+.div-login-menu-leave,
+.div-register-menu-leave {
   position: absolute;
   right: 10px;
   top: 10px; }
 
 .div-user-menu-leave.div-user-menu-leave-active,
 .div-guest-menu-leave.div-guest-menu-leave-active,
-.div-login-menu-leave.div-login-menu-leave-active {
+.div-login-menu-leave.div-login-menu-leave-active,
+.div-register-menu-leave.div-register-menu-leave-active {
   position: absolute;
   right: 10px;
   top: -100px;
@@ -130,7 +135,8 @@ html, body {
 .div-modal > .container > .message {
   font-size: 0.9em; }
 
-.div-modal > .container > .div-login-menu {
+.div-modal > .container > .div-login-menu,
+.div-modal > .container > .div-register-menu {
   position: relative;
   right: auto;
   top: auto; }
