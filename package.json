@@ -30,6 +30,7 @@
     "webpack": "^3.0.0"
   },
   "dependencies": {
-    "react-transition-group": "^1.2.0"
+    "react-transition-group": "^1.2.0",
+    "streamqueue": "^1.1.1"
   }
 }

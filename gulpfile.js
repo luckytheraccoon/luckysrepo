@@ -7,6 +7,7 @@ const uglify = require('gulp-uglify');
 const pump = require('pump');
 const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
+const streamqueue = require('streamqueue');
 
 gulp.task('default', ['css','js'], function () {});
 
@@ -31,7 +32,7 @@ gulp.task('sass', function () {
 
 gulp.task('js', ['browserify'], function(cb) {
   pump([
-        gulp.src('raw_resources/js/lib/babelified-merged-scripts.js'),
+        gulp.src('raw_resources/js/lib/browserified-babelified-merged-scripts.js'),
         uglify(),
 		    rename("scripts.js"),
         gulp.dest('js')
@@ -40,7 +41,7 @@ gulp.task('js', ['browserify'], function(cb) {
   );
 });
 
-gulp.task('browserify', ['concat-js'], function() {
+gulp.task('browserify', ['babel'], function() {
     var stream = gulp.src('raw_resources/js/lib/babelified-merged-scripts.js')
         .pipe(gulpBrowser.browserify()) 
         .pipe(rename({
@@ -50,14 +51,8 @@ gulp.task('browserify', ['concat-js'], function() {
     return stream;
 });
 
-gulp.task('concat-js', ['babel'], function () {
-  return gulp.src(['!raw_resources/js/lib/merged-index.js','!raw_resources/js/lib/babelified-merged-*','!raw_resources/js/lib/browserified-*','raw_resources/js/lib/*.js'])
-    .pipe(concat('babelified-merged-scripts.js'))
-    .pipe(gulp.dest('raw_resources/js/lib'));
-});
-
-gulp.task('babel', () => {
-    return gulp.src('raw_resources/js/src/*')
+gulp.task('babel', ['concat-js'], () => {
+    return gulp.src('raw_resources/js/lib/merged-scripts.js')
         .pipe(babel({
             presets: ["env","react"]
         }))
@@ -65,4 +60,16 @@ gulp.task('babel', () => {
           prefix: "babelified-",
         }))
         .pipe(gulp.dest('raw_resources/js/lib'));
+});
+
+gulp.task('concat-js', function () {
+  return gulp.src([
+      'raw_resources/js/src/imports.js',
+      'raw_resources/js/src/index.js',
+      'raw_resources/js/src/common-components.js',
+      'raw_resources/js/src/auth-menu.js',
+      'raw_resources/js/src/test.js',
+      'raw_resources/js/src/main-render.js'])
+    .pipe(concat('merged-scripts.js'))
+    .pipe(gulp.dest('raw_resources/js/lib'));
 });

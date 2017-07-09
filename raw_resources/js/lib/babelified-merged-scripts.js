@@ -1,63 +1,5 @@
 "use strict";
 
-function LogoHeader() {
-    return React.createElement("img", { src: "http://loosepixel.com/wp-content/uploads/2013/02/copy-flat_lplogo.png" });
-}
-
-function Button(props) {
-    return React.createElement(
-        "button",
-        { className: props.classes, onClick: props.onClick },
-        props.label
-    );
-}
-function SubmitButton(props) {
-    var value;
-    if (props.value == null) {
-        value = "Submit";
-    }
-    return React.createElement("input", { type: "submit", value: value });
-}
-function TextInput(props) {
-    if (props.name == null) {
-        props.name = props.id;
-    }
-    return React.createElement("input", { id: props.id, name: props.name, type: "text", value: props.value, onChange: props.onChange });
-}
-function PasswordInput(props) {
-    if (props.name == null) {
-        props.name = props.id;
-    }
-    return React.createElement("input", { id: props.id, name: props.name, type: "password", value: props.value, onChange: props.onChange });
-}
-function Label(props) {
-    return React.createElement(
-        "label",
-        { htmlFor: props.for },
-        props.text
-    );
-}
-function DivContainer(props) {
-    var className = "";
-    if (typeof props.classes != "undefined") {
-        className = props.classes + " ";
-    }
-    className = className + "div-container";
-    return React.createElement(
-        "div",
-        { className: className },
-        props.children
-    );
-}
-function MainContainer(props) {
-    return React.createElement(
-        "div",
-        { className: "div-main" },
-        props.children
-    );
-}
-"use strict";
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require("react");
@@ -245,15 +187,231 @@ function Header() {
     );
 }
 
+var WelcomeMat = function (_React$Component2) {
+    _inherits(WelcomeMat, _React$Component2);
+
+    function WelcomeMat(props) {
+        _classCallCheck(this, WelcomeMat);
+
+        var _this2 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
+
+        _this2.handleWarningButton = _this2.handleWarningButton.bind(_this2);
+        _this2.state = { showWarning: false };
+        return _this2;
+    }
+
+    _createClass(WelcomeMat, [{
+        key: "handleWarningButton",
+        value: function handleWarningButton() {
+            this.setState(function (prevState) {
+                return {
+                    showWarning: !prevState.showWarning
+                };
+            });
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            return _react2.default.createElement(
+                DivContainer,
+                { classes: "div-welcome-mat" },
+                _react2.default.createElement(Button, { label: "Show Warning", onClick: this.handleWarningButton }),
+                _react2.default.createElement(Warning, { warn: this.state.showWarning })
+            );
+        }
+    }]);
+
+    return WelcomeMat;
+}(_react2.default.Component);
+
+function Modal(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-modal", onClick: props.closeMethod },
+        _react2.default.createElement(
+            "div",
+            { className: "container bg-white box-md" },
+            _react2.default.createElement(
+                "div",
+                { className: "title" },
+                props.title
+            ),
+            _react2.default.createElement(
+                "div",
+                { className: "message" },
+                props.message
+            ),
+            props.children,
+            _react2.default.createElement(
+                "button",
+                { onClick: props.closeMethod, className: "close-modal" },
+                "Close"
+            )
+        )
+    );
+}
+
+var MainApp = function (_React$Component3) {
+    _inherits(MainApp, _React$Component3);
+
+    function MainApp() {
+        _classCallCheck(this, MainApp);
+
+        return _possibleConstructorReturn(this, (MainApp.__proto__ || Object.getPrototypeOf(MainApp)).apply(this, arguments));
+    }
+
+    _createClass(MainApp, [{
+        key: "render",
+        value: function render() {
+
+            return _react2.default.createElement(
+                MainContainer,
+                null,
+                _react2.default.createElement(Header, null),
+                _react2.default.createElement(GrowBar, null),
+                _react2.default.createElement(WelcomeMat, null),
+                _react2.default.createElement(HotTopics, null),
+                _react2.default.createElement(HowWeWork, null),
+                _react2.default.createElement(Featured, null),
+                _react2.default.createElement(Footer, null)
+            );
+        }
+    }]);
+
+    return MainApp;
+}(_react2.default.Component);
+
+function ajaxGet(route, before, onComplete) {
+    if (before != null) {
+        before();
+    }
+
+    fetch("http://myproject.app" + route, {
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-type": "application/json charset=UTF-8",
+            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+        },
+        method: "GET"
+    }).then(function (response) {
+        return response.json();
+    }).then(function (response) {
+        onComplete(response);
+    });
+}
+
+function ajaxPost(route, body, before, onComplete) {
+    if (before != null) {
+        before();
+    }
+
+    var csrfToken = document.querySelector("meta[name='_token']").content;
+
+    if (body === null) {
+        body = { _token: csrfToken };
+    } else {
+        body._token = csrfToken;
+    }
+
+    fetch("http://myproject.app" + route, {
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-type": "application/json charset=UTF-8",
+            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
+        },
+        method: "POST",
+        body: JSON.stringify(body)
+    }).then(function (response) {
+        return response.json();
+    }).then(function (response) {
+        onComplete(response);
+    }.bind(this));
+}
+
+$.fn.serializeObject = function () {
+    var o = {};
+    var a = this.serializeArray();
+    $.each(a, function () {
+        if (o[this.name] !== undefined) {
+            if (!o[this.name].push) {
+                o[this.name] = [o[this.name]];
+            }
+            o[this.name].push(this.value || '');
+        } else {
+            o[this.name] = this.value || '';
+        }
+    });
+    return o;
+};
+
+function LogoHeader() {
+    return _react2.default.createElement("img", { src: "http://loosepixel.com/wp-content/uploads/2013/02/copy-flat_lplogo.png" });
+}
+
+function Button(props) {
+    return _react2.default.createElement(
+        "button",
+        { className: props.classes, onClick: props.onClick },
+        props.label
+    );
+}
+function SubmitButton(props) {
+    var value;
+    if (props.value == null) {
+        value = "Submit";
+    }
+    return _react2.default.createElement("input", { type: "submit", value: value });
+}
+function TextInput(props) {
+    if (props.name == null) {
+        props.name = props.id;
+    }
+    return _react2.default.createElement("input", { id: props.id, name: props.name, type: "text", value: props.value, onChange: props.onChange });
+}
+function PasswordInput(props) {
+    if (props.name == null) {
+        props.name = props.id;
+    }
+    return _react2.default.createElement("input", { id: props.id, name: props.name, type: "password", value: props.value, onChange: props.onChange });
+}
+function Label(props) {
+    return _react2.default.createElement(
+        "label",
+        { htmlFor: props.for },
+        props.text
+    );
+}
+function DivContainer(props) {
+    var className = "";
+    if (typeof props.classes != "undefined") {
+        className = props.classes + " ";
+    }
+    className = className + "div-container";
+    return _react2.default.createElement(
+        "div",
+        { className: className },
+        props.children
+    );
+}
+function MainContainer(props) {
+    return _react2.default.createElement(
+        "div",
+        { className: "div-main" },
+        props.children
+    );
+}
+
 var AuthMenu = function (_React$PureComponent) {
     _inherits(AuthMenu, _React$PureComponent);
 
     function AuthMenu(props) {
         _classCallCheck(this, AuthMenu);
 
-        var _this2 = _possibleConstructorReturn(this, (AuthMenu.__proto__ || Object.getPrototypeOf(AuthMenu)).call(this, props));
+        var _this4 = _possibleConstructorReturn(this, (AuthMenu.__proto__ || Object.getPrototypeOf(AuthMenu)).call(this, props));
 
-        _this2.state = {
+        _this4.state = {
             isLoggedIn: false,
             loggedInAs: null,
             showLoginForm: false,
@@ -267,27 +425,27 @@ var AuthMenu = function (_React$PureComponent) {
             checkAuthDone: false
         };
 
-        _this2.handleLogoutClick = _this2.handleLogoutClick.bind(_this2);
-        _this2.handleShowLoginFormClick = _this2.handleShowLoginFormClick.bind(_this2);
-        _this2.handleHideLoginFormClick = _this2.handleHideLoginFormClick.bind(_this2);
-        _this2.handleShowRegisterFormClick = _this2.handleShowRegisterFormClick.bind(_this2);
-        _this2.handleHideRegisterFormClick = _this2.handleHideRegisterFormClick.bind(_this2);
-        _this2.handleChange = _this2.handleChange.bind(_this2);
-        _this2.handleLoginFormSubmit = _this2.handleLoginFormSubmit.bind(_this2);
-        _this2.handleRegisterFormSubmit = _this2.handleRegisterFormSubmit.bind(_this2);
-        _this2.handleLoginError = _this2.handleLoginError.bind(_this2);
-        _this2.handleOpenModal = _this2.handleOpenModal.bind(_this2);
-        _this2.handleCloseModal = _this2.handleCloseModal.bind(_this2);
-        return _this2;
+        _this4.handleLogoutClick = _this4.handleLogoutClick.bind(_this4);
+        _this4.handleShowLoginFormClick = _this4.handleShowLoginFormClick.bind(_this4);
+        _this4.handleHideLoginFormClick = _this4.handleHideLoginFormClick.bind(_this4);
+        _this4.handleShowRegisterFormClick = _this4.handleShowRegisterFormClick.bind(_this4);
+        _this4.handleHideRegisterFormClick = _this4.handleHideRegisterFormClick.bind(_this4);
+        _this4.handleChange = _this4.handleChange.bind(_this4);
+        _this4.handleLoginFormSubmit = _this4.handleLoginFormSubmit.bind(_this4);
+        _this4.handleRegisterFormSubmit = _this4.handleRegisterFormSubmit.bind(_this4);
+        _this4.handleLoginError = _this4.handleLoginError.bind(_this4);
+        _this4.handleOpenModal = _this4.handleOpenModal.bind(_this4);
+        _this4.handleCloseModal = _this4.handleCloseModal.bind(_this4);
+        return _this4;
     }
 
     _createClass(AuthMenu, [{
         key: "componentDidMount",
         value: function componentDidMount() {
-            var _this3 = this;
+            var _this5 = this;
 
             ajaxGet("/checkAuth", null, function (response) {
-                _this3.setState({
+                _this5.setState({
                     isLoggedIn: response.loggedIn,
                     loggedInAs: response.loggedInAs,
                     checkAuthDone: true
@@ -318,14 +476,14 @@ var AuthMenu = function (_React$PureComponent) {
     }, {
         key: "handleLogoutClick",
         value: function handleLogoutClick() {
-            var _this4 = this;
+            var _this6 = this;
 
             ajaxPost("/logout", null, function () {
-                _this4.setState({
+                _this6.setState({
                     checkAuthDone: false
                 });
             }, function (response) {
-                _this4.setState({
+                _this6.setState({
                     isLoggedIn: response.loggedIn,
                     checkAuthDone: true
                 });
@@ -363,11 +521,11 @@ var AuthMenu = function (_React$PureComponent) {
     }, {
         key: "handleRegisterFormSubmit",
         value: function handleRegisterFormSubmit(event) {
-            var _this5 = this;
+            var _this7 = this;
 
             event.preventDefault();
             ajaxPost("/register", $("#registerForm").serializeObject(), function () {
-                _this5.setState({
+                _this7.setState({
                     checkAuthDone: false
                 });
             }, function (response) {
@@ -377,32 +535,32 @@ var AuthMenu = function (_React$PureComponent) {
     }, {
         key: "handleLoginFormSubmit",
         value: function handleLoginFormSubmit(event) {
-            var _this6 = this;
+            var _this8 = this;
 
             event.preventDefault();
             ajaxPost("/login", $("#loginForm").serializeObject(), function () {
-                _this6.setState({
+                _this8.setState({
                     checkAuthDone: false
                 });
             }, function (response) {
-                _this6.setState({
+                _this8.setState({
                     isLoggedIn: response.loggedIn,
                     loggedInAs: response.loggedInAs
                 });
 
-                if (_this6.state.isLoggedIn === true) {
-                    _this6.setState({
+                if (_this8.state.isLoggedIn === true) {
+                    _this8.setState({
                         checkAuthDone: true
                     });
-                    if (_this6.state.showModal) {
-                        _this6.setState({ showModal: false, modalDismissed: true });
+                    if (_this8.state.showModal) {
+                        _this8.setState({ showModal: false, modalDismissed: true });
                         return;
                     }
-                    _this6.handleHideLoginFormClick();
+                    _this8.handleHideLoginFormClick();
                     return;
                 }
 
-                _this6.handleLoginError();
+                _this8.handleLoginError();
             });
         }
     }, {
@@ -561,71 +719,6 @@ function LoggedUserMenu(props) {
         _react2.default.createElement(Button, { label: "Sign Out", onClick: props.onClickLogout })
     );
 }
-
-var WelcomeMat = function (_React$Component2) {
-    _inherits(WelcomeMat, _React$Component2);
-
-    function WelcomeMat(props) {
-        _classCallCheck(this, WelcomeMat);
-
-        var _this7 = _possibleConstructorReturn(this, (WelcomeMat.__proto__ || Object.getPrototypeOf(WelcomeMat)).call(this, props));
-
-        _this7.handleWarningButton = _this7.handleWarningButton.bind(_this7);
-        _this7.state = { showWarning: false };
-        return _this7;
-    }
-
-    _createClass(WelcomeMat, [{
-        key: "handleWarningButton",
-        value: function handleWarningButton() {
-            this.setState(function (prevState) {
-                return {
-                    showWarning: !prevState.showWarning
-                };
-            });
-        }
-    }, {
-        key: "render",
-        value: function render() {
-            return _react2.default.createElement(
-                DivContainer,
-                { classes: "div-welcome-mat" },
-                _react2.default.createElement(Button, { label: "Show Warning", onClick: this.handleWarningButton }),
-                _react2.default.createElement(Warning, { warn: this.state.showWarning })
-            );
-        }
-    }]);
-
-    return WelcomeMat;
-}(_react2.default.Component);
-
-function Modal(props) {
-    return _react2.default.createElement(
-        "div",
-        { className: "div-modal", onClick: props.closeMethod },
-        _react2.default.createElement(
-            "div",
-            { className: "container bg-white box-md" },
-            _react2.default.createElement(
-                "div",
-                { className: "title" },
-                props.title
-            ),
-            _react2.default.createElement(
-                "div",
-                { className: "message" },
-                props.message
-            ),
-            props.children,
-            _react2.default.createElement(
-                "button",
-                { onClick: props.closeMethod, className: "close-modal" },
-                "Close"
-            )
-        )
-    );
-}
-
 function RegisterForm(props) {
     return _react2.default.createElement(
         "div",
@@ -663,101 +756,5 @@ function LoginForm(props) {
         cancelButton
     );
 }
-
-var MainApp = function (_React$Component3) {
-    _inherits(MainApp, _React$Component3);
-
-    function MainApp() {
-        _classCallCheck(this, MainApp);
-
-        return _possibleConstructorReturn(this, (MainApp.__proto__ || Object.getPrototypeOf(MainApp)).apply(this, arguments));
-    }
-
-    _createClass(MainApp, [{
-        key: "render",
-        value: function render() {
-
-            return _react2.default.createElement(
-                MainContainer,
-                null,
-                _react2.default.createElement(Header, null),
-                _react2.default.createElement(GrowBar, null),
-                _react2.default.createElement(WelcomeMat, null),
-                _react2.default.createElement(HotTopics, null),
-                _react2.default.createElement(HowWeWork, null),
-                _react2.default.createElement(Featured, null),
-                _react2.default.createElement(Footer, null)
-            );
-        }
-    }]);
-
-    return MainApp;
-}(_react2.default.Component);
-
-_reactDom2.default.render(_react2.default.createElement(MainApp, null), document.getElementById("root"));
-
-function ajaxGet(route, before, onComplete) {
-    if (before != null) {
-        before();
-    }
-
-    fetch("http://myproject.app" + route, {
-        credentials: "same-origin",
-        headers: {
-            "X-Requested-With": "XMLHttpRequest",
-            "Content-type": "application/json charset=UTF-8",
-            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-        },
-        method: "GET"
-    }).then(function (response) {
-        return response.json();
-    }).then(function (response) {
-        onComplete(response);
-    });
-}
-
-function ajaxPost(route, body, before, onComplete) {
-    if (before != null) {
-        before();
-    }
-
-    var csrfToken = document.querySelector("meta[name='_token']").content;
-
-    if (body === null) {
-        body = { _token: csrfToken };
-    } else {
-        body._token = csrfToken;
-    }
-
-    fetch("http://myproject.app" + route, {
-        credentials: "same-origin",
-        headers: {
-            "X-Requested-With": "XMLHttpRequest",
-            "Content-type": "application/json charset=UTF-8",
-            "X-CSRF-TOKEN": document.querySelector("meta[name='_token']").content
-        },
-        method: "POST",
-        body: JSON.stringify(body)
-    }).then(function (response) {
-        return response.json();
-    }).then(function (response) {
-        onComplete(response);
-    }.bind(this));
-}
-
-$.fn.serializeObject = function () {
-    var o = {};
-    var a = this.serializeArray();
-    $.each(a, function () {
-        if (o[this.name] !== undefined) {
-            if (!o[this.name].push) {
-                o[this.name] = [o[this.name]];
-            }
-            o[this.name].push(this.value || '');
-        } else {
-            o[this.name] = this.value || '';
-        }
-    });
-    return o;
-};
 console.log("yo");
+_reactDom2.default.render(_react2.default.createElement(MainApp, null), document.getElementById("root"));
