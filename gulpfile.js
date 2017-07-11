@@ -1,13 +1,16 @@
+const browserify = require('browserify');
 const gulp = require('gulp');
+const source = require('vinyl-source-stream');
+const buffer = require('vinyl-buffer');
+const uglify = require('gulp-uglify');
+const sourcemaps = require('gulp-sourcemaps');
+const gutil = require('gulp-util');
 const babel = require('gulp-babel');
-const gulpBrowser = require("gulp-browser");
 const rename = require('gulp-rename');
 const concat = require('gulp-concat');
-const uglify = require('gulp-uglify');
 const pump = require('pump');
 const sass = require('gulp-sass');
 const cleanCSS = require('gulp-clean-css');
-const streamqueue = require('streamqueue');
 
 gulp.task('default', ['css','js'], function () {});
 
@@ -30,15 +33,20 @@ gulp.task('sass', function () {
     .pipe(gulp.dest('raw_resources/css/src'));
 });
 
-gulp.task('js', ['browserify'], function(cb) {
-  pump([
-        gulp.src('raw_resources/js/lib/browserified-babelified-merged-scripts.js'),
-        uglify(),
-		    rename("scripts.js"),
-        gulp.dest('js')
-    ],
-    cb
-  );
+gulp.task('js', ['babel'], function(cb) {
+  var b = browserify({
+    entries: 'raw_resources/js/lib/babelified-merged-scripts.js',
+    debug: true
+  });
+
+  return b.bundle()
+    .pipe(source('raw_resources/js/lib/babelified-merged-scripts.js'))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+        .pipe(uglify())
+        .on('error', gutil.log)
+    .pipe(sourcemaps.write('./xf'))
+    .pipe(gulp.dest('./x'));
 });
 
 gulp.task('browserify', ['babel'], function() {

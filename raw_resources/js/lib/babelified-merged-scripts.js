@@ -286,7 +286,7 @@ function ajaxGet(route, before, onComplete) {
         before();
     }
 
-    fetch("http://myproject.app" + route, {
+    fetch(route, {
         credentials: "same-origin",
         headers: {
             "X-Requested-With": "XMLHttpRequest",
@@ -314,7 +314,7 @@ function ajaxPost(route, body, before, onComplete) {
         body._token = csrfToken;
     }
 
-    fetch("http://myproject.app" + route, {
+    fetch(route, {
         credentials: "same-origin",
         headers: {
             "X-Requested-With": "XMLHttpRequest",

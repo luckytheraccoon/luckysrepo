@@ -159,7 +159,7 @@ function ajaxGet(route, before, onComplete) {
     }
 
     fetch(
-        "http://myproject.app"+route,
+        route,
         {
             credentials: "same-origin",
             headers: {
@@ -190,7 +190,7 @@ function ajaxPost(route, body, before, onComplete) {
     }
     
     fetch(
-        "http://myproject.app"+route,
+        route,
         {
             credentials: "same-origin",
             headers: {

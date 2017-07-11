@@ -4,7 +4,13 @@
   "description": "",
   "main": "index.html",
   "scripts": {
-    "build": "babel src -d lib && browserify lib/babel-index.js > lib/index.js"
+    "start:dev": "npm-run-all concat babel build:dev",
+    "start:prod": "npm-run-all concat babel build:prod",
+    "concat": "concat -o raw_resources/js/lib/merged-scripts.js raw_resources/js/src/imports.js raw_resources/js/src/index.js raw_resources/js/src/common-components.js raw_resources/js/src/auth-menu.js raw_resources/js/src/test.js raw_resources/js/src/main-render.js",
+    "babel": "babel raw_resources/js/lib/merged-scripts.js --out-file raw_resources/js/lib/babelified-merged-scripts.js",
+    "uglify": "uglifyjs raw_resources/js/lib/bundle.src.js --compress --mangle -o js/bundle.min.js",
+    "build:dev": "webpack --env=dev --progress --profile --colors",
+    "build:prod": "webpack --env=prod --progress --profile --colors"
   },
   "author": "",
   "license": "ISC",
@@ -15,22 +21,33 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "bootstrap": "^3.3.7",
+    "browserify": "^14.4.0",
+    "concat": "^1.0.3",
     "css-loader": "^0.28.4",
     "eslint": "^4.1.1",
     "eslint-plugin-react": "^7.1.0",
+    "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-browser": "^3.0.4",
     "gulp-clean-css": "^3.4.2",
     "gulp-concat": "^2.6.1",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.0",
     "gulp-uglify": "^3.0.0",
+    "gulp-util": "^3.0.8",
     "jquery": "^3.2.1",
+    "npm-run-all": "^4.0.2",
     "pump": "^1.0.2",
-    "webpack": "^3.0.0"
-  },
-  "dependencies": {
+    "react": "~15.3.0",
+    "react-addons-create-fragment": "~15.3.0",
+    "react-addons-css-transition-group": "~15.3.0",
+    "react-addons-update": "~15.3.0",
+    "react-dom": "~15.3.0",
     "react-transition-group": "^1.2.0",
-    "streamqueue": "^1.1.1"
+    "uglify-js": "^3.0.24",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "webpack": "^3.0.0"
   }
 }
