@@ -9,8 +9,11 @@ class AuthMenu extends React.PureComponent {
             showRegisterForm: false,
             loginForm_email: "",
             loginForm_password: "",
+            registerForm_name: "",
             registerForm_email: "",
             registerForm_password: "",
+            registerForm_password_confirmation: "",
+            registerForm_valid:null,
             showModal: false,
             modalDismissed: false,
             checkAuthDone: false
@@ -114,7 +117,22 @@ class AuthMenu extends React.PureComponent {
                 });
             },
             (response) => {
-                alert("hey!");
+                if(this.state.isLoggedIn === true) {
+                    this.setState({ 
+                        registerForm_valid: true,
+                        checkAuthDone: true
+                    });
+                    alert("welcome!");
+                    return;
+                }
+                this.setState({ 
+                    registerForm_valid: false 
+                });
+                for (var field in response) {
+                    for (var errorKey in response[field]) {
+                        console.log(field, errorKey, response[field][errorKey]);
+                    }
+                }
             }
         );
     }
@@ -169,9 +187,12 @@ class AuthMenu extends React.PureComponent {
                     <Modal title="Sign Up" message="Use the form below to sign up." closeMethod={this.handleHideRegisterFormClick}>
                         <RegisterMenu registerForm={{
                             fields:{    
+                                name:this.state.registerForm_name,
                                 email:this.state.registerForm_email,
-                                password:this.state.registerForm_password
+                                password:this.state.registerForm_password,
+                                password_confirmation:this.state.registerForm_password_confirmation
                             },
+                            valid:this.state.registerForm_valid,
                             onSubmit:this.handleRegisterFormSubmit,
                             onInputChange:this.handleChange
                         }} />
@@ -254,15 +275,37 @@ class AuthMenu extends React.PureComponent {
     }
 }
 
-function RegisterMenu(props) {
-    return (
-        <div className="div-register-menu">
-            <RegisterForm 
-                fields={props.registerForm.fields} 
-                onSubmit={props.registerForm.onSubmit}
-                onInputChange={props.registerForm.onInputChange} />
-        </div>
-    );
+class RegisterMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {showFormErrors: false};
+    }
+    componentWillReceiveProps(nextProps) {
+        this.setState({ showFormErrors: !nextProps.registerForm.valid });
+    }
+    render() {
+        var showFormErrors = this.state.showFormErrors;
+        if(showFormErrors) {
+            var formErrors = <div>Show Errors here...</div>;
+        }
+        return (
+            <div className="div-register-menu">
+
+                <ReactCSSTransitionGroup 
+                    transitionName="form-errors" 
+                    transitionEnterTimeout={1500} 
+                    transitionLeaveTimeout={1500}>
+                    {formErrors}
+                </ReactCSSTransitionGroup>
+
+                <RegisterForm 
+                    valid={this.props.registerForm.valid}
+                    fields={this.props.registerForm.fields} 
+                    onSubmit={this.props.registerForm.onSubmit}
+                    onInputChange={this.props.registerForm.onInputChange} />
+            </div>
+        );
+    }
 }
 function LoginMenu(props) {
 
@@ -296,10 +339,14 @@ function RegisterForm(props) {
     return (
         <div>
             <form id="registerForm" onSubmit={props.onSubmit}>
+                <Label for="registerForm_name" text="Name:" />
+                <TextInput id="registerForm_name" name="name" value={props.fields.name} onChange={props.onInputChange} />
                 <Label for="registerForm_email" text="Email:" />
                 <TextInput id="registerForm_email" name="email" value={props.fields.email} onChange={props.onInputChange} />
                 <Label for="registerForm_password" text="Password:" />
                 <PasswordInput id="registerForm_password" name="password" value={props.fields.password} onChange={props.onInputChange} />
+                <Label for="registerForm_password_confirmation" text="Confirm Password:" />
+                <PasswordInput id="registerForm_password_confirmation" name="password_confirmation" value={props.fields.password_confirmation} onChange={props.onInputChange} />
                 <SubmitButton />
             </form>
         </div>

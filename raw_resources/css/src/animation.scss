@@ -63,3 +63,22 @@ $animation-short-duration: 200ms;
 	opacity:0.1;
   	transition: $animation-short-duration;
 }
+
+
+.form-errors {
+	opacity:1;
+}
+.form-errors-enter {
+	opacity:0.1;
+}
+.form-errors-enter.form-errors-enter-active {
+	opacity:1;
+  	transition: $animation-short-duration;
+}
+.form-errors-leave {
+	opacity:1;
+}
+.form-errors-leave.form-errors-leave-active {
+	opacity:0.1;
+  	transition: $animation-short-duration;
+}

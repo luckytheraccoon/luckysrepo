@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "npm-run-all concat babel build:dev",
     "start:prod": "npm-run-all concat babel build:prod",
-    "concat": "concat -o raw_resources/js/lib/merged-scripts.js raw_resources/js/src/imports.js raw_resources/js/src/index.js raw_resources/js/src/common-components.js raw_resources/js/src/auth-menu.js raw_resources/js/src/test.js raw_resources/js/src/main-render.js",
+    "concat": "concat -o raw_resources/js/lib/merged-scripts.js raw_resources/js/src/imports.js raw_resources/js/src/index.js raw_resources/js/src/common-components.js raw_resources/js/src/auth-menu.js raw_resources/js/src/effects.js raw_resources/js/src/test.js raw_resources/js/src/main-render.js",
     "babel": "babel raw_resources/js/lib/merged-scripts.js --out-file raw_resources/js/lib/babelified-merged-scripts.js",
     "uglify": "uglifyjs raw_resources/js/lib/bundle.src.js --compress --mangle -o js/bundle.min.js",
     "build:dev": "webpack --env=dev --progress --profile --colors",

@@ -281,8 +281,11 @@ class AuthMenu extends React.PureComponent {
             showRegisterForm: false,
             loginForm_email: "",
             loginForm_password: "",
+            registerForm_name: "",
             registerForm_email: "",
             registerForm_password: "",
+            registerForm_password_confirmation: "",
+            registerForm_valid:null,
             showModal: false,
             modalDismissed: false,
             checkAuthDone: false
@@ -386,7 +389,22 @@ class AuthMenu extends React.PureComponent {
                 });
             },
             (response) => {
-                alert("hey!");
+                if(this.state.isLoggedIn === true) {
+                    this.setState({ 
+                        registerForm_valid: true,
+                        checkAuthDone: true
+                    });
+                    alert("welcome!");
+                    return;
+                }
+                this.setState({ 
+                    registerForm_valid: false 
+                });
+                for (var field in response) {
+                    for (var errorKey in response[field]) {
+                        console.log(field, errorKey, response[field][errorKey]);
+                    }
+                }
             }
         );
     }
@@ -441,9 +459,12 @@ class AuthMenu extends React.PureComponent {
                     <Modal title="Sign Up" message="Use the form below to sign up." closeMethod={this.handleHideRegisterFormClick}>
                         <RegisterMenu registerForm={{
                             fields:{    
+                                name:this.state.registerForm_name,
                                 email:this.state.registerForm_email,
-                                password:this.state.registerForm_password
+                                password:this.state.registerForm_password,
+                                password_confirmation:this.state.registerForm_password_confirmation
                             },
+                            valid:this.state.registerForm_valid,
                             onSubmit:this.handleRegisterFormSubmit,
                             onInputChange:this.handleChange
                         }} />
@@ -526,15 +547,37 @@ class AuthMenu extends React.PureComponent {
     }
 }
 
-function RegisterMenu(props) {
-    return (
-        <div className="div-register-menu">
-            <RegisterForm 
-                fields={props.registerForm.fields} 
-                onSubmit={props.registerForm.onSubmit}
-                onInputChange={props.registerForm.onInputChange} />
-        </div>
-    );
+class RegisterMenu extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {showFormErrors: false};
+    }
+    componentWillReceiveProps(nextProps) {
+        this.setState({ showFormErrors: !nextProps.registerForm.valid });
+    }
+    render() {
+        var showFormErrors = this.state.showFormErrors;
+        if(showFormErrors) {
+            var formErrors = <div>Show Errors here...</div>;
+        }
+        return (
+            <div className="div-register-menu">
+
+                <ReactCSSTransitionGroup 
+                    transitionName="form-errors" 
+                    transitionEnterTimeout={1500} 
+                    transitionLeaveTimeout={1500}>
+                    {formErrors}
+                </ReactCSSTransitionGroup>
+
+                <RegisterForm 
+                    valid={this.props.registerForm.valid}
+                    fields={this.props.registerForm.fields} 
+                    onSubmit={this.props.registerForm.onSubmit}
+                    onInputChange={this.props.registerForm.onInputChange} />
+            </div>
+        );
+    }
 }
 function LoginMenu(props) {
 
@@ -568,10 +611,14 @@ function RegisterForm(props) {
     return (
         <div>
             <form id="registerForm" onSubmit={props.onSubmit}>
+                <Label for="registerForm_name" text="Name:" />
+                <TextInput id="registerForm_name" name="name" value={props.fields.name} onChange={props.onInputChange} />
                 <Label for="registerForm_email" text="Email:" />
                 <TextInput id="registerForm_email" name="email" value={props.fields.email} onChange={props.onInputChange} />
                 <Label for="registerForm_password" text="Password:" />
                 <PasswordInput id="registerForm_password" name="password" value={props.fields.password} onChange={props.onInputChange} />
+                <Label for="registerForm_password_confirmation" text="Confirm Password:" />
+                <PasswordInput id="registerForm_password_confirmation" name="password_confirmation" value={props.fields.password_confirmation} onChange={props.onInputChange} />
                 <SubmitButton />
             </form>
         </div>
@@ -596,6 +643,131 @@ function LoginForm(props) {
             {cancelButton}
         </div>
     );
+}
+
+function barGrow() {
+    var emitters = 10;
+    var gridHSize = 10;
+    var gridVSize = 30;
+    var gridSize = gridHSize * gridVSize;
+    var posiId = 1;
+    var positions = [];
+    var pickedPositions = [];
+    for(var hPosi=1;hPosi<=gridHSize;hPosi++) {
+        for(var vPosi=1;vPosi<=gridVSize;vPosi++) {
+            positions.push({id:posiId, coordsString: hPosi + "-" + vPosi, coords:{x:hPosi, y:vPosi}});
+            posiId++;
+        }
+    }
+
+    /*positions.map(function(c) {
+    	var x = document.createElement("span");
+        x.style.top = c.coords.x - 1 + "px";
+        x.style.left = c.coords.y - 1 + "px";
+        x.style.width = "1px";
+        x.style.height = "1px";
+        x.style.display = "block";
+        x.style.background = "green";
+        x.style.position = "absolute";
+    	document.getElementById("root").appendChild(x);
+	});*/
+
+
+    for(var i=1;i<=emitters;i++) {
+        //pick a position within the grid that's not already taken
+        var centerOffset = 0;
+        if(centerOffset != 0) {
+	        var xC = getRandomIntInclusive(gridHSize/centerOffset, gridHSize - (gridHSize/centerOffset));
+	        var yC = getRandomIntInclusive(gridVSize/centerOffset, gridVSize - (gridVSize/centerOffset));
+        } else {
+	        var xC = getRandomIntInclusive(1, gridHSize-1);
+	        var yC = getRandomIntInclusive(1, gridVSize-1);
+        }
+        console.log(xC);
+        var pickedIndex =  getPosiByCoordString(xC+"-"+yC); 
+		var x = document.createElement("span");
+        x.id = positions[pickedIndex].id;
+        x.style.top = positions[pickedIndex].coords.y * 1 + "px";
+        x.style.left = positions[pickedIndex].coords.x * 1 + "px";
+        x.className = " glyphicon glyphicon-star progressEffectsStar";
+/*
+		if(positions[pickedIndex].coords.y <= (gridVSize/2)) {
+        	x.style.animationName = "upwards";
+        } else {
+        	x.style.animationName = "downwards";
+        }
+
+        if(positions[pickedIndex].coords.x >= (gridHSize/2)) {
+        	x.style.animationName += "-right";
+        } else {
+        	x.style.animationName += "-left";
+        }
+        */
+        x.style.animationDelay = getRandomArbitrary(0,1) + "s";
+        //x.appendChild(document.createTextNode(positions[pickedIndex].coordsString));
+        document.getElementById("progressEffectsStarWrap").appendChild(x);
+
+
+        addPickedPositions(0, pickedIndex);
+        gridSize--;
+        if(gridSize<1) {
+        	break;
+        }
+    }
+
+		function getPosiByCoordString(string) {
+			return positions.map(function(e) { return e.coordsString; }).indexOf(string);
+		}
+		function addPickedPositions(padding, pickedIndex) {
+
+			var x = positions[pickedIndex].coords.x;
+			var y = positions[pickedIndex].coords.y;
+			var array = [];
+			array.push(x+"-"+y);
+			for(var p=1;p<=padding;p++) {
+
+				for(var pp=1;pp<=padding;pp++) {
+					array.push((x+p)+"-"+(y-(1*pp)));
+					array.push((x+p)+"-"+(y+(1*pp)));
+					array.push((x-p)+"-"+(y-(1*pp)));
+					array.push((x-p)+"-"+(y+(1*pp)));
+				}
+				
+				array.push((x+p)+"-"+(y));
+				array.push((x-p)+"-"+(y));
+				array.push((x)+"-"+(y+p));
+				array.push((x)+"-"+(y-p));
+
+				array.map(function(x) {
+					pushToPickedPosition(positions[getPosiByCoordString(x)]);
+					spliceAtPickedPosition(getPosiByCoordString(x));
+				});
+			}
+
+		}
+
+		function spliceAtPickedPosition(pickedPosition) {
+			if(typeof pickedPosition != "undefined" && pickedPosition != -1) {
+				positions.splice(pickedPosition, 1);
+			}
+		}
+		function pushToPickedPosition (pickedPosition) {
+			if(typeof pickedPosition != "undefined") {
+				pickedPositions.push(pickedPosition);
+        		gridSize--;
+			}
+		}
+
+};
+
+function getRandomIntInclusive(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum is inclusive and the minimum is inclusive 
+}
+
+function getRandomArbitrary(min, max) {
+  return Math.random() * (max - min) + min;
 }
 console.log("yo");
 ReactDOM.render(
